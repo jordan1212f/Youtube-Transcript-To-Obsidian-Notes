@@ -5,7 +5,7 @@ from ai import generate_note
 from format import format_note
 from save import save_note
 
-# Step 1: Get the YouTube URL from command line arguments
+#Get the YouTube URL from command line arguments
 def main():
     if len(sys.argv) < 2:
         print('Usage: python main.py <youtube-url>')
@@ -19,7 +19,7 @@ def main():
     else:
         config = prompt_for_config()
 
-# Step 2: Load and create config
+#Load and create config
 
     if config_exists():
         config = load_config()
@@ -47,8 +47,7 @@ def main():
         note=note
     )
  
-    # Step 6: Save to the Obsidian vault
-    print('💾 Saving to vault...')
+    print('Saving to vault...')
     filepath = save_note(
         vault_path=config['vault_path'],
         title=data['title'],
@@ -61,13 +60,13 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        # User pressed Ctrl+C — exit quietly, no ugly traceback
-        print('\n👋 Cancelled')
+        #User pressed Ctrl+C — exit quietly, no ugly traceback
+        print('\n Cancelled')
         sys.exit(0)
     except Exception as err:
-        # Catch any error from any module and print it cleanly
+        #Catch any error from any module and print it cleanly
         print(f'Error: {err}')
         sys.exit(1)
 
-        
+
  
