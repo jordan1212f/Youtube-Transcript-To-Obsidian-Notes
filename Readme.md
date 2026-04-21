@@ -4,6 +4,8 @@ A Python CLI tool that turns YouTube videos into structured Obsidian notes — s
 
 Paste a YouTube URL, get a Markdown note with a summary, key takeaways, analogies, actionable steps, and chapter breakdowns. Notes are automatically organised by topic in your Obsidian vault.
 
+This is the way that I chose to have my notes organised, but feel free to clone the repo and edit for your own format.
+
 ## How it works
 
 ```
