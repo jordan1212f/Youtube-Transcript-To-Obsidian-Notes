@@ -1,10 +1,35 @@
+import argparse
 import sys
 from config import config_exists, load_config, prompt_for_config
 from transcript import fetch_transcript
 from ai import generate_note
 from format import format_note
 from save import save_note
+from batch import load_urls, process_batch, print_batch_summary
 from ui import Spinner, print_banner, RED, PURPLE, GREEN, RESET
+
+def parse_args():
+    parser = argparse.ArgumentParser(Description = 'Turn Youtube videos into Obisdian notes')
+
+    parser.add_argument(
+        'url',
+        nargs = '?',
+        help = 'Youtube video URL'
+    )
+
+    parser.add_argument(
+        '--batch',
+        help = 'Path to a text file containing multiple Youtube URLs (one per line)'
+    )
+
+    args = parser.parse_args()
+
+    if not args.url and not args.batch:
+        parser.print_help()
+        print(f'\n{RED}Error: Provide a single URL or use --batch <file>{RESET}')
+        sys.exit(1)
+    
+    return args
 
 
 def main():
