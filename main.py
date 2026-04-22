@@ -31,6 +31,27 @@ def parse_args():
     
     return args
 
+def process_single_url(url, config):
+    with Spinner('Fetching transcipt...', colour = RED) as sp:
+        data = fetch_transcript(url, config['youtube_api_key'])
+        sp.stop(f'Transcript fetched ({data["word_count"]} words)')
+
+        with Spinner('Generating note with Claude...', colour = PURPLE) as sp:
+            note = generate_note(
+                api_key = config['api_key'],
+                title = data['title'],
+                channel = data['channel'],
+                transcript = data['transcript'],
+                word_count = data['word_count']
+            )
+            sp.stop('Note generated')
+
+    markdown = format_note(
+        title = data['title'],
+        channel = data['channel'],
+        url = url,
+        note = note
+    )
 
 def main():
     """Main function — runs the full pipeline from URL to saved note."""
