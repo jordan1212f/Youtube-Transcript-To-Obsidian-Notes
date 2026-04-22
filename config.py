@@ -36,18 +36,22 @@ def prompt_for_config():
 
     vault_path = input('Enter your Obsidan Vault Path: ').strip()
     api_key = input('Enter your Claude API key: ').strip()
+    youtube_api_key = input('Enter your YouTube Data API key: ').strip()
 
     if not vault_path:
         raise ValueError('Vault path cannot be empty')
     if not api_key:
         raise ValueError('API key cannot be empty')
+    if not youtube_api_key:
+        raise ValueError('YouTube Data API key cannot be empty')
     
     if not Path(vault_path).exists():
         raise ValueError(f'Vault path does not exist: {vault_path}')
     
     config = {
         'vault_path': vault_path,
-        'api_key': api_key
+        'api_key': api_key,
+        'youtube_api_key': youtube_api_key
     }
 
     save_config(config)

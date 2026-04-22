@@ -66,10 +66,11 @@ class Spinner:
         return False
  
 def print_banner():
+    """Print a coloured banner when the tool starts."""
     banner = f"""
 {PURPLE}╔═══════════════════════════════════╗
-║           {RED}▶{PURPLE}  yt-note               ║
-║   {RESET}YouTube → Obsidian Notes{PURPLE}        ║
+║           {RED}▶{PURPLE}  Obsiditube             ║
+║   {RESET}YouTube To Obsidian Notes{PURPLE}       ║
 ╚═══════════════════════════════════╝{RESET}
 """
     print(banner)

@@ -45,7 +45,7 @@ def fetch_video_metadata(video_id, youtube_api_key):
 
 
     request = youtube.videos().list(
-        party = 'snippet',
+        part = 'snippet',
         id = video_id
     )
     response = request.execute()
@@ -85,14 +85,15 @@ def fetch_transcript(url, youtube_api_key):
     metadata = fetch_video_metadata(video_id, youtube_api_key)
 
     try:
-        segments = YouTubeTranscriptApi.get_transcript(video_id)
+        ytt = YouTubeTranscriptApi()
+        segments = ytt.fetch(video_id)
     except Exception:
         raise RuntimeError('Transcript not available for this video.'
         '\n Subtitles may be disabled or video is private.')
     
     #Join all segments text into one continous string
 
-    full_text = ''.join(segment['text'] for segment in segments)
+    full_text = ''.join(segment.text for segment in segments)
     word_count = len(full_text.split())
 
     return {
