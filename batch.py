@@ -52,10 +52,10 @@ def process_batch(urls, config):
     fetched = []
     fetch_errors = []
 
-    for i, url in enumerate(urls, stats=1):
+    for i, url in enumerate(urls, start=1):
         print(f'{PURPLE}[{i}/{len(urls)}]{RESET}{url}')
         try:
-            with Spinner('Fetching...' colour = RED) as sp:
+            with Spinner('Fetching...', colour = RED) as sp:
                 data = fetch_transcript(url, config['youtube_api_key'])
                 sp.stop(f'{data["title"]} ({data["word_count"]} words)')
                 fetched.append({'url' : url, 'data' : data})
@@ -69,7 +69,7 @@ def process_batch(urls, config):
         
         total_est = sum(
              estimate_cost(f['data']['transcript'])['estimated_cost']
-               for f in fetched
+            for f in fetched
         )
 
         print(f'\n{PURPLE}══════════════════════════════════════{RESET}')
