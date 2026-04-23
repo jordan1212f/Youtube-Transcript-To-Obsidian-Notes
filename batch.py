@@ -53,34 +53,35 @@ def process_batch(urls, config):
     fetch_errors = []
 
     for i, url in enumerate(urls, start=1):
+        print(f'DEBUG: about to process URL {i}: {url}')
         print(f'{PURPLE}[{i}/{len(urls)}]{RESET}{url}')
         try:
             with Spinner('Fetching...', colour = RED) as sp:
                 data = fetch_transcript(url, config['youtube_api_key'])
                 sp.stop(f'{data["title"]} ({data["word_count"]} words)')
-                fetched.append({'url' : url, 'data' : data})
+            fetched.append({'url' : url, 'data' : data})
         except Exception as err:
              print(f'{RED}❌ Failed to fetch {url}: {err}{RESET}')
-             fetch_errors.append({'url': url, 'error': str(err)})
+             fetch_errors.append({'url' : url, 'error' : str(err)})
 
-        if not fetched:
-             print(f'\n{RED} No transcripts fetched. Nothing to procecss. Exiting.{RESET}')
-             return _empty_results(len(urls), fetch_errors)
+    if not fetched:
+        print(f'\n{RED} No transcripts fetched. Nothing to procecss. Exiting.{RESET}')
+        return _empty_results(len(urls), fetch_errors)
         
-        total_est = sum(
-             estimate_cost(f['data']['transcript'])['estimated_cost']
-            for f in fetched
+    total_est = sum(
+        estimate_cost(f['data']['transcript'])['estimated_cost']
+        for f in fetched
         )
 
-        print(f'\n{PURPLE}══════════════════════════════════════{RESET}')
-        print(f'📋 {len(fetched)} videos ready, {len(fetch_errors)} failed to fetch')
-        print(f'💰 Estimated total cost: ~${total_est:.4f}')
-        print(f'{PURPLE}══════════════════════════════════════{RESET}')
+    print(f'\n{PURPLE}══════════════════════════════════════{RESET}')
+    print(f'📋 {len(fetched)} videos ready, {len(fetch_errors)} failed to fetch')
+    print(f'💰 Estimated total cost: ~${total_est:.4f}')
+    print(f'{PURPLE}══════════════════════════════════════{RESET}')
 
-        confirm = input(f'\n   Continue with {len(fetched)} videos? [Y/n] ').strip().lower()
-        if confirm == 'n':
-            print('👋 Cancelled')
-            return _empty_results(len(urls), fetch_errors)
+    confirm = input(f'\n   Continue with {len(fetched)} videos? [Y/n] ').strip().lower()
+    if confirm == 'n':
+        print('👋 Cancelled')
+        return _empty_results(len(urls), fetch_errors)
 
     print(f'\n{PURPLE} Phase 2: Generating notes... {RESET}\n')
     results = {
