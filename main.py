@@ -10,7 +10,7 @@ from cost import record_usage, format_cost_report, estimate_cost
 from ui import Spinner, print_banner, RED, PURPLE, GREEN, RESET
 
 def parse_args():
-    parser = argparse.ArgumentParser(Description = 'Turn Youtube videos into Obisdian notes')
+    parser = argparse.ArgumentParser(description = 'Turn Youtube videos into Obisdian notes')
 
     parser.add_argument(
         'url',
@@ -37,24 +37,24 @@ def process_single_url(url, config):
         data = fetch_transcript(url, config['youtube_api_key'])
         sp.stop(f'Transcript fetched ({data["word_count"]} words)')
 
-        est = estimate_cost(data['transcript'])
-        print(f'\n Estimated cost: ~${est["estimated_cost"]}:.4f')
-        confirm = input('   Continue? [Y/n] ').strip().lower()
-        if confirm  == 'n':
-            print('Cancelled by user.')
-            return
+    est = estimate_cost(data['transcript'])
+    print(f'\n💰 Estimated cost: ~${est["estimated_cost"]:.4f}')
+    confirm = input('   Continue? [Y/n] ').strip().lower()
+    if confirm  == 'n':
+        print('👍 Cancelled by user.')
+        return
 
-        with Spinner('Generating note with Claude...', colour = PURPLE) as sp:
-            result = generate_note(
-                api_key = config['api_key'],
-                title = data['title'],
-                channel = data['channel'],
-                transcript = data['transcript'],
-                word_count = data['word_count']
-            )
-            note = result['note']
-            usage = result['usage']
-            sp.stop('Note generated')
+    with Spinner('Generating note with Claude...', colour = PURPLE) as sp:
+        result = generate_note(
+            api_key = config['api_key'],
+            title = data['title'],
+            channel = data['channel'],
+            transcript = data['transcript'],
+            word_count = data['word_count']
+        )
+        note = result['note']
+        usage = result['usage']
+        sp.stop('Note generated')
 
     markdown = format_note(
         title = data['title'],

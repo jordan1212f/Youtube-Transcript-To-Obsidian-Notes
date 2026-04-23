@@ -69,12 +69,13 @@ def process_batch(urls, config):
                             title = data['title'],
                             channel = data['channel'],
                             transcript = data['transcript'],
-                            word_count = data['word_count'])
+                            word_count = data['word_count']
+                            )
 
                         sp.stop('Note generated')
 
                         markdown = format_note(
-                             title = data['title']
+                             title = data['title'],
                              channel = data['channel'],
                              url = url,
                              note = note
