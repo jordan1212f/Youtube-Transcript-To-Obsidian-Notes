@@ -106,7 +106,7 @@ def format_cost_report(stats):
     so $0.02 displays as $0.0200 — useful for small amounts.
     """
     lines = [
-        f'💰 This note: ${stats["call_cost"]:.4f} '
+        f'💰 This note: ${stats["call_cost"]:.4f}'
         f'({stats["call_input"]:,} in / {stats["call_output"]:,} out)',
         f'📊 All time: ${stats["total_cost"]:.4f} across {stats["total_calls"]} notes'
     ]
