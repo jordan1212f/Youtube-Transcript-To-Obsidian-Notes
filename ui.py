@@ -59,10 +59,11 @@ class Spinner:
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type:
-            self.stop(success=False)
-        else:
-            self.stop()
+        if self.running:
+            if exc_type:
+                self.stop(success=False)
+            else:
+                self.stop()
         return False
  
 def print_banner():
