@@ -53,6 +53,15 @@ def process_single_url(url, config):
         note = note
     )
 
+    with Spinner('Saving to vault...', colour = PURPLE) as sp:  
+        filepath = save_note(
+            vault_path = config['vault_path'],
+            title = data['title'],
+            tags = note['tags'],
+            markdown = markdown
+        )
+        sp.stop(f'Done! Saved to: {filepath}')
+
 def main():
     """Main function — runs the full pipeline from URL to saved note."""
 
