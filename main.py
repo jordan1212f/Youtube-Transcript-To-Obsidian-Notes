@@ -6,6 +6,7 @@ from ai import generate_note
 from format import format_note
 from save import save_note
 from batch import load_urls, process_batch, print_batch_summary
+from cost import record_usage, format_cost_report, estimate_cost
 from ui import Spinner, print_banner, RED, PURPLE, GREEN, RESET
 
 def parse_args():
@@ -36,14 +37,23 @@ def process_single_url(url, config):
         data = fetch_transcript(url, config['youtube_api_key'])
         sp.stop(f'Transcript fetched ({data["word_count"]} words)')
 
+        est = estimate_cost(data['transcript'])
+        print(f'\n Estimated cost: ~${est["estimated_cost"]}:.4f')
+        confirm = input('   Continue? [Y/n] ').strip().lower()
+        if confirm  == 'n':
+            print('Cancelled by user.')
+            return
+
         with Spinner('Generating note with Claude...', colour = PURPLE) as sp:
-            note = generate_note(
+            result = generate_note(
                 api_key = config['api_key'],
                 title = data['title'],
                 channel = data['channel'],
                 transcript = data['transcript'],
                 word_count = data['word_count']
             )
+            note = result['note']
+            usage = result['usage']
             sp.stop('Note generated')
 
     markdown = format_note(
@@ -61,60 +71,35 @@ def process_single_url(url, config):
             markdown = markdown
         )
         sp.stop(f'Done! Saved to: {filepath}')
+    
+    stats = record_usage(usage['input_tokens'], usage['output_tokens'])
+    print(f'\n{format_cost_report(stats)}')
 
 def main():
     """Main function — runs the full pipeline from URL to saved note."""
 
     print_banner()
 
-    if len(sys.argv) < 2:
-        print(f'Usage: python main.py {RED}<youtube-url>{RESET}')
-        print(f'Example: python main.py "https://www.youtube.com/watch?v=abc123"')
-        sys.exit(1)
-
-    url = sys.argv[1]
+    args = parse_args()
 
     if config_exists():
         config = load_config()
     else:
         config = prompt_for_config()
 
-    with Spinner('Fetching transcript...', colour=RED) as sp:
-        data = fetch_transcript(url, config['youtube_api_key'])
-        sp.stop(f'Transcript fetched ({data["word_count"]} words)')
-
-    with Spinner('Generating note with Claude...', colour=PURPLE) as sp:
-        note = generate_note(
-            api_key=config['api_key'],
-            title=data['title'],
-            channel=data['channel'],
-            transcript=data['transcript'],
-            word_count=data['word_count']
-        )
-        sp.stop('Note generated')
-
-    markdown = format_note(
-        title=data['title'],
-        channel=data['channel'],
-        url=url,
-        note=note
-    )
-
-    with Spinner('Saving to vault...', colour=PURPLE) as sp:
-        filepath = save_note(
-            vault_path=config['vault_path'],
-            title=data['title'],
-            tags=note['tags'],
-            markdown=markdown
-        )
-        sp.stop(f'Done! Saved to: {filepath}')
-
+    if args.batch:
+        urls = load_urls(args.batch)
+        print(f' Loaded {len(urls)} URLs from {args.batch} \n')
+        results = process_batch(urls, config)
+        print_batch_summary(results)
+    else:
+        process_single_url(args.url, config)
 
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print(f'\n👋 Cancelled')
+        print(f'\n Cancelled')
         sys.exit(0)
     except Exception as err:
         print(f'\n{RED}❌ Error: {err}{RESET}')
