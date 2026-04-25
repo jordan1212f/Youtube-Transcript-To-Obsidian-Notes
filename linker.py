@@ -195,5 +195,25 @@ def append_backlink(filepath, new_note_title):
             lines.insert(insert_index, backlink_line)
             text = '\n'.join(lines)
         else:
-            
+
+            text += f'\n\n## Related Notes\n\n{backlink_line}\n'
+
+    path.write_text(text, encoding='utf-8')
+
+def display_proposed_links(linked_notes):
+    """Show the user which notes will be linked and why.
  
+    Args:
+        linked_notes: List of dicts with 'title' and 'reason'
+ 
+    Returns:
+        True if user confirms, False if they decline
+    """
+    print(f'\n{PURPLE}🔗 Found {len(linked_notes)} related notes:{RESET}\n')
+ 
+    for i, note in enumerate(linked_notes, start=1):
+        print(f'  {i}. {note["title"]} — {note["reason"]}')
+ 
+    print()
+    confirm = input('  Apply these links? [Y/n] ').strip().lower()
+    return confirm != 'n'
