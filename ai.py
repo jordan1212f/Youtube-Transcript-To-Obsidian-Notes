@@ -106,4 +106,97 @@ Transcript:
 def parse_json_response(text):
     """Clean up and parse Claude's JSON response.
  
-    Sometimes Clau
+    Sometimes Claude wraps the JSON in ```json ... ``` fences
+    even when told not to. This function strips those out
+    before parsing.
+ 
+    Args:
+        text: The raw text from Claude's response
+ 
+    Returns:
+        Parsed Python dict
+    """
+    cleaned = text.strip()
+    if cleaned.startswith('```'):
+        lines = cleaned.split('\n')
+        cleaned = '\n'.join(lines[1:-1])
+ 
+    return json.loads(cleaned)
+
+LINKING_PROMPT = """You are a knowledge-linking assistant. You will be given:
+1. A new note's title, tags, and summary
+2. A list of existing notes with their titles and tags
+ 
+Your job is to identify which existing notes are conceptually related
+to the new note. Not just keyword matches — think about whether someone
+studying the new note's topic would benefit from reading the existing note.
+ 
+Return ONLY valid JSON, no markdown fences, no preamble.
+The JSON must be an array of objects:
+ 
+[
+  {"index": 1, "reason": "both cover long-term investing strategies"},
+  {"index": 3, "reason": "directly explains a concept mentioned in this video"}
+]
+ 
+Rules:
+- Return at most 5 related notes
+- Only include notes that are genuinely related — don't force connections
+- If no notes are related, return an empty array []
+- The "reason" should be a short phrase explaining the connection
+- "index" refers to the number in the candidate list provided"""
+
+def rank_related_notes(api_key, new_note_summary, new_note_title, new_note_tags, candidates):
+
+    client = Anthropic(api_key=api_key)
+
+    candidate_list = '\n'.join(
+        f'{i}. "{c["title"]}" (tags: {", ".join(c.get("tags", []))})'
+        for i, c in enumerate(candidates, start=1)
+    )
+
+    user_message = f"""New Note Title: {new_note_title}
+New Note Tags: {", ".join(new_note_tags)}     
+New Note Summary: {new_note_summary}
+
+Existing Notes:
+{candidate_list}"""
+    
+    response = client.messages.create(
+        model = 'claude-sonnet-4-6',
+        max_tokens = 1024,
+        system = LINKING_PROMPT,
+        messages = [
+            {'role' : 'user', 'content' : user_message}
+        ]
+    )
+
+    text = response.content[0].text
+
+    try:
+        matches = parse_json_response(text)
+    except json.JSONDecodeError:
+        matches = []
+
+    #Map the indicies back to actual note data
+
+    links = []
+    for match in matches:
+        idx = match.get('index', 0) - 1
+
+        if 0 <= idx < len(candidates):
+            links.append({
+                'index': match['index'],
+                'title': candidates[idx]['title'],
+                'reason': match.get('reason', 'related content'),
+                'path': candidates[idx].get('path', '')
+            })
+
+    return {
+        'links' : links[:5],
+        'usage' : {
+            'input_tokens' : response.usage.input_tokens,
+            'output_tokens' : response.usage.output_tokens
+        } 
+    }
+

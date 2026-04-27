@@ -72,3 +72,111 @@ class TestParseFrontmatter(unittest.TestCase):
 
             self.assertEqual(result.get('tags', []), [])
 
+class TestScanVault(unittest.TestCase):
+        """Tests for scanning the vault and finding existing notes."""
+        
+        def test_finds_notes_in_subfolders(self):
+            
+            with tempfile.TemporaryDirectory() as tmp:
+                notes_dir = Path(tmp) / 'Youtube Notes'
+
+                create_test_note(
+                    notes_dir / 'Finance', 'investing.md',
+                    title = 'Index Fund Investing',
+                    tags = ['finance', 'investing']
+                )
+                create_test_note(
+                    notes_dir / 'Tech', 'python.md',
+                    title = 'Python Decorators',
+                    tags = ['python', 'tutorial']
+                )
+
+                results = scan_vault(tmp)
+                self.assertEqual(len(results), 2)
+
+                titles = [r['title'] for r in results]
+
+                self.assertIn('Index Fund Investing', titles)
+                self.assertIn('Python Decorators', titles)
+
+        def test_empty_vault(self):
+             """Should return empty list if YouTube Notes folder doesn't exist."""
+             with tempfile.TemporaryDirectory() as tmp:
+                 notes_dir = Path(tmp) / 'Youtube Notes' / 'Tech'
+                 notes_dir.mkdir(parents = True)
+
+                 create_test_note(
+                     notes_dir, 'real-note.md',
+                     title = 'Real Note', tags = ['tech']
+                 )
+                 (notes_dir / 'not-a-note.txt').write_text('Ignore me')
+
+                 results = scan_vault(tmp)
+                 self.assertEqual(len(results), 1)
+                 self.assertEqual(results[0]['title'], 'Real Note')
+
+class TestKeywordFilter(unittest.TestCase):
+    """Tests for keyword-based candidates filtering"""
+
+    def test_matches_shared_tags(self):
+        """Notes with shared tags should be returned as candidates."""
+        new_note = {'title' : 'ETF Investing Guide', 'tags' : ['finance', 'etf']}
+        existing = [
+        {
+            'title' : 'Dollar Cost Averaging',
+            'tags' : ['finance', 'investing'],
+            'path' : '/a.md',
+            'filename' : 'a'
+        },
+        {
+            'title' : 'Python Basics',
+            'tags' : ['python', 'tutorial'],
+            'path' : '/b.md',
+            'filename' : 'b'
+        },
+        ]
+
+        results = keyword_filter(new_note, existing, max_candidates = 10)
+
+        titles = [r['title'] for r in results]
+        self.assertNoIn('Python Basics', titles)
+        self.assertIn('Dollar Cost Averaging', titles)
+
+        def test_respects_max_candidates(self):
+            """Should return at most max_candidates results."""
+            new_note = {
+                'title' : 'Finance',
+                'tags' : ['finance']
+            }
+            existing = [
+                {'title' : f'Note {i}', 
+                 'tags' : ['finance'],
+                 'path' : f'/{i}.md',
+                 'filename' : str(i)
+                }
+                for i in range(20)
+            ]
+
+            results = keyword_filter(new_note, existing, max_candidates = 5)
+            self.assertEqual(len(results), 5)
+
+        def test_no_matches(self):
+             """Should return empty list when nothing matches."""
+             new_note = {
+                 'title' : 'Cooking Pasta',
+                 'tags' : ['cooking']
+                 }
+             existing = [
+                 {
+                'title' : 'Python Basics',
+                'tags' : ['python'],
+                'path' : '/a,md',
+                'filename' : 'a'
+                 },
+             ]
+
+             results = keyword_filter(new_note, existing, max_candidates = 10)
+             self.assertEqual(results, [])
+
+class TestInsertInLineLinks(unittest.TestCase):
+    
