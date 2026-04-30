@@ -111,7 +111,7 @@ def keyword_filter(new_note, existing_notes, max_candidates):
     return scored[:max_candidates]
 
 
-def inset_inline_links(markdown, linked_titles):
+def insert_inline_links(markdown, linked_titles):
     """
     Insert [[wiki links]] on the first mention of each linked note title
     Searches the note body (not frontmatter) for each title. Only replaces first occurence to avoid cluttering
@@ -216,4 +216,4 @@ def display_proposed_links(linked_notes):
  
     print()
     confirm = input('  Apply these links? [Y/n] ').strip().lower()
-    return confirm != 'n'
+    return confirm != 'n
