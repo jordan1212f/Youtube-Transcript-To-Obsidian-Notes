@@ -24,7 +24,7 @@ def scan_vault(vault_path):
                 'filename' : filepath.name,
                 'path' : str(filepath)
             })
-        return notes
+    return notes
     
 def parse_frontmatter(filepath):
     """
@@ -49,15 +49,12 @@ def parse_frontmatter(filepath):
     
     for line in frontmatter_text.strip().split('\n'):
         if line.startswith('title'):
-            
             result['title'] = line.split(':', 1)[1].strip().strip('"')
 
-            if line.startswith('tags'):
-                tags_str = line.split(':', 1)[1].strip()
-
-                tags_str = tags_str.strip('[]')
-
-                result['tags'] = [t.strip() for t in tags_str.split(',') if t.strip()]
+        if line.startswith('tags'):
+            tags_str = line.split(':', 1)[1].strip()
+            tags_str = tags_str.strip('[]')
+            result['tags'] = [t.strip() for t in tags_str.split(',') if t.strip()]
 
     return result if result else None
 
@@ -149,11 +146,12 @@ def build_related_section(linked_notes):
         - [[How Compound Interest Works]] — directly related concept
         - [[Building Wealth in Your 20s]] — both cover long-term finance
     """
-    lines = ['## Related Notes', '']
+    lines = ['## 🔗 Related Notes', '']
     for note in linked_notes:
-        lines.append(f' [[{note["title"]}]] = {note["reason"]}')
+        lines.append(f'- [[{note["title"]}]] - {note["reason"]}')
     lines.append('')
     return '\n'.join(lines)
+    #! Fix: em dash is not a regular hyphen
 
 def append_backlink(filepath, new_note_title):
     """Add a backlink to an existing note's Related Notes section.
@@ -183,7 +181,7 @@ def append_backlink(filepath, new_note_title):
         insert_index = None
 
         for i, line in enumerate(lines):
-            if line.startswith('## Related Notes'):
+            if line.startswith('## 🔗 Related Notes'):
                 insert_index = i + 1
                 while insert_index < len(lines) and (
                     lines[insert_index].startswith('- ') or
@@ -196,7 +194,7 @@ def append_backlink(filepath, new_note_title):
             text = '\n'.join(lines)
         else:
 
-            text += f'\n\n## Related Notes\n\n{backlink_line}\n'
+            text += f'\n\n'## 🔗 Related Notes'\n\n{backlink_line}\n'
 
     path.write_text(text, encoding='utf-8')
 
@@ -216,4 +214,4 @@ def display_proposed_links(linked_notes):
  
     print()
     confirm = input('  Apply these links? [Y/n] ').strip().lower()
-    return confirm != 'n
+    return confirm != 'n'

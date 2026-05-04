@@ -90,7 +90,7 @@ class TestScanVault(unittest.TestCase):
     def test_finds_notes_in_subfolders(self):
         """Should find .md files in all category subfolders."""
         with tempfile.TemporaryDirectory() as tmp:
-            notes_dir = Path(tmp) / 'YouTube Notes'
+            notes_dir = Path(tmp) / 'Youtube Notes'
 
             create_test_note(
                 notes_dir / 'Finance', 'investing.md',
