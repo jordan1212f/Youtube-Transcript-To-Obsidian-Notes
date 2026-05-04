@@ -256,14 +256,14 @@ class TestBuildRelatedSection(unittest.TestCase):
 
         result = build_related_section(linked)
 
-        self.assertIn('## 🔗 Related Notes', result)
+        self.assertIn('## Related Notes', result)
         self.assertIn('- [[Note A]] — shared topic', result)
         self.assertIn('- [[Note B]] — related concept', result)
 
     def test_empty_list(self):
         """Should still have the header even with no links."""
         result = build_related_section([])
-        self.assertIn('## 🔗 Related Notes', result)
+        self.assertIn('## Related Notes', result)
 
 
 class TestAppendBacklink(unittest.TestCase):
@@ -281,7 +281,7 @@ class TestAppendBacklink(unittest.TestCase):
             append_backlink(str(filepath), 'New Note Title')
 
             text = filepath.read_text()
-            self.assertIn('## 🔗 Related Notes', text)
+            self.assertIn('## Related Notes', text)
             self.assertIn('- [[New Note Title]]', text)
 
     def test_appends_to_existing_section(self):
