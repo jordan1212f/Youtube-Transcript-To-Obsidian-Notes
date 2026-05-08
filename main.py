@@ -9,6 +9,7 @@ from save import save_note
 from batch import load_urls, process_batch, print_batch_summary
 from cost import record_usage, format_cost_report, estimate_cost
 from linker import scan_vault, keyword_filter, insert_inline_links, build_related_section, append_backlink, display_proposed_links
+from search import run_search
 from ui import Spinner, print_banner, RED, PURPLE, GREEN, RESET
 
 def parse_args():
@@ -23,6 +24,11 @@ def parse_args():
     parser.add_argument(
         '--batch',
         help = 'Path to a text file containing multiple Youtube URLs (one per line)'
+    )
+
+    parser.add_argument(
+        '--ask',
+        help='Ask a question across your knowledge base'
     )
 
     args = parser.parse_args()
@@ -54,6 +60,7 @@ def process_single_url(url, config):
             transcript = data['transcript'],
             word_count = data['word_count']
         )
+
         note = result['note']
         usage = result['usage']
         sp.stop('Note generated')
@@ -73,6 +80,11 @@ def process_single_url(url, config):
             markdown = markdown
         )
         sp.stop(f'Done! Saved to: {filepath}')
+
+    from embedder import store_embeddings
+    with Spinner('Embedding note for search...', colour = PURPLE) as sp:
+        store_embeddings(filepath, data['title'], note['summary'])
+        sp.stop('Note embedded')
     
     stats = record_usage(usage['input_tokens'], usage['output_tokens'])
     print(f'\n{format_cost_report(stats)}')
@@ -153,7 +165,9 @@ def main():
     else:
         config = prompt_for_config()
 
-    if args.batch:
+    if args.ask:
+        run_search(args.ask, config)
+    elif args.batch:
         urls = load_urls(args.batch)
         print(f' Loaded {len(urls)} URLs from {args.batch} \n')
         results = process_batch(urls, config)

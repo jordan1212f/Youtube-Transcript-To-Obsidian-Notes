@@ -200,3 +200,50 @@ Existing Notes:
         } 
     }
 
+SYNTHESIS_PROMPT = """You are a knowledge synthesis assistant. The user will ask a question
+and provide summaries from their personal notes as context.
+ 
+Your job is to answer the question using ONLY the information in the provided notes.
+Write as if you're helping a friend understand a topic using their own study materials.
+ 
+Rules:
+- Only use information from the provided notes. Do not add external knowledge.
+- Reference which notes your answer draws from by their titles.
+- Write in clear, flowing prose — not bullet points.
+- If the notes don't contain enough information to fully answer the question, say so.
+- Keep your answer concise — 2-4 paragraphs maximum.
+- End with a list of the note titles you referenced."""
+
+def synthesise_answer(api_key, query, context, source_titles):
+    client = Anthropic(api_key=api_key)
+
+    user_message = f"""Question: {query}
+
+Here are relevant notes from my knowledge base:
+ 
+{context}"""
+    
+    response = client.messages.create(
+        model='claude-sonnet-4-6',
+        max_tokens=2048,
+        system=SYNTHESIS_PROMPT,
+        messages=[
+            {'role': 'user', 'content': user_message}
+        ]
+    )
+ 
+    answer = response.content[0].text
+
+    referenced = [t for t in source_titles if t.lower() in answer.lower()]
+
+    if not referenced:
+        referenced = source_titles
+
+    return {
+        'answer' : answer,
+        'sources' : referenced, 
+        'usage' : {
+            'input_tokens' : response.usage.input_tokens,
+            'output_tokens' : response.usage.output_tokens
+        }
+    }
