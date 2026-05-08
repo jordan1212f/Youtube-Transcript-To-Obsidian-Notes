@@ -51,7 +51,9 @@ def prompt_for_config():
     config = {
         'vault_path': vault_path,
         'api_key': api_key,
-        'youtube_api_key': youtube_api_key
+        'youtube_api_key': youtube_api_key,
+        'link_candidates' : 15,
+        'search_results' : 5
     }
 
     save_config(config)
