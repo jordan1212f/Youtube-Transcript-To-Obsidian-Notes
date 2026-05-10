@@ -50,7 +50,8 @@ def format_note(title, channel, url, note):
     current_date = today()
  
     # Format tags for the frontmatter — e.g. [python, cli, tutorial]
-    tags_str = ', '.join(note['tags'])
+    clean_tags = [tag.replace(' ', '-') for tag in note['tags']]
+    tags_str = ', '.join(clean_tags)
  
     # Start building the Markdown string
     # The frontmatter goes between --- fences at the top

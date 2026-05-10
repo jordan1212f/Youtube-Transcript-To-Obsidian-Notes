@@ -21,7 +21,9 @@ The JSON must match this exact structure:
 }
 
 Rules:
-- tags: 2-5 lowercase tags. Choose freely based on the content
+- tags: 2-5 lowercase tags, use hyphens for multi-word tags.
+  (e.g. "quantative-finance" not "quantitative finance").
+  Choose freely based on the content
   (e.g. python, investing, productivity, health, design).
   The first tag will be used as the folder name so make it
   the broadest category.

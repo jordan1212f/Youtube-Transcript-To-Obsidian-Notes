@@ -89,10 +89,11 @@ def process_batch(urls, config):
         'failed' : 0,
         'total' : len(urls),
         'errors' : [],
-        'saved' : []
+        'saved' : [],
+        'batch_cost' : 0.0
      }
     
-    for i, item in enumerate(urls, start=1):
+    for i, item in enumerate(fetched, start=1):
         url = item['url']
         data = item['data']
         print(f'{PURPLE}{i}/{len(fetched)}{RESET} {data["title"]}')
@@ -133,9 +134,6 @@ def process_batch(urls, config):
                         results['batch_cost'] += stats['call_cost']
                         print(f'{GREEN}✅{RESET} Saved to: {filepath}')
                         print(f'💰 ${stats["call_cost"]:.4f}')
-                        results['success'] += 1
-                        results['saved'].append(filepath)
-
                         results['success'] += 1
                         results['saved'].append(filepath)
 

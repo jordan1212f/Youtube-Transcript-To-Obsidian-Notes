@@ -33,7 +33,7 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if not args.url and not args.batch:
+    if not args.url and not args.batch and not args.ask:
         parser.print_help()
         print(f'\n{RED}Error: Provide a single URL or use --batch <file>{RESET}')
         sys.exit(1)
@@ -81,9 +81,9 @@ def process_single_url(url, config):
         )
         sp.stop(f'Done! Saved to: {filepath}')
 
-    from embedder import store_embeddings
+    from embedder import store_embedding
     with Spinner('Embedding note for search...', colour = PURPLE) as sp:
-        store_embeddings(filepath, data['title'], note['summary'])
+        store_embedding(filepath, data['title'], note['summary'])
         sp.stop('Note embedded')
     
     stats = record_usage(usage['input_tokens'], usage['output_tokens'])
@@ -125,7 +125,7 @@ def process_single_url(url, config):
     )
     print(f'Linking cost: ${link_stats["call_cost"]:.4f}')
 
-    if not link_result['Links']:
+    if not link_result['links']:
         print(' No strong connections found -- Skipping link generation')
         return
     
@@ -133,7 +133,7 @@ def process_single_url(url, config):
         print('👍 Linking cancelled by user.')
         return
     
-    saved_text = Path(filepath).read_text(eoncoding = 'utf-8')
+    saved_text = Path(filepath).read_text(encoding = 'utf-8')
     linked_titles = [link['title'] for link in link_result['links']]
 
     updated_text = insert_inline_links(saved_text, linked_titles)
