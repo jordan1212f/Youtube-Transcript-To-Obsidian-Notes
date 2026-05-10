@@ -43,7 +43,6 @@ def run_search(query, config):
     if confirm == 'n':
         print('Showing results only')
         return
-    print('DEBUG: Passed the check, preparing to synth')
     
     with Spinner('Synthesising answer from your notes...', colour = PURPLE) as sp:
         synthesis = synthesise_answer(
