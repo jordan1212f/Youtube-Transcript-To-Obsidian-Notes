@@ -2,13 +2,14 @@
 # Tests for the embedding and search infrastructure.
 # These test the free, local parts only — no Claude API calls.
 # Run with: python -m unittest test_search.py -v
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import unittest
 import tempfile
 import sqlite3
 import numpy as np
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from unittest.mock import patch
 
 # We need to override the DB_PATH before importing embedder

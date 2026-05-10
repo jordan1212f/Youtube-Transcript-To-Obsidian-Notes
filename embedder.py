@@ -59,7 +59,7 @@ def store_embedding(note_path, title, summary):
     conn.commit()
     conn.close()
 
-def search_embedding(query, top_n=5):
+def search_embeddings(query, top_n=5):
     """
     Currently going with a brute force search approach. For a small number of test notes.
     Embeds query text and compares vs stored. Embedding with cosine similarity. Returns top N matches.

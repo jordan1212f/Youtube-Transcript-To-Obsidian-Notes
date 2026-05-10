@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-CONFIG_DIR = Path.home() / 'yt.note'
+CONFIG_DIR = Path.home() / 'yt-note'
 CONFIG_PATH = CONFIG_DIR / 'config.json'
 
 
