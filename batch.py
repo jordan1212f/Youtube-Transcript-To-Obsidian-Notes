@@ -134,6 +134,10 @@ def process_batch(urls, config):
                         results['batch_cost'] += stats['call_cost']
                         print(f'{GREEN}✅{RESET} Saved to: {filepath}')
                         print(f'💰 ${stats["call_cost"]:.4f}')
+
+                        from embedder import store_embedding
+                        store_embedding(filepath, data['title'], note['summary'])
+
                         results['success'] += 1
                         results['saved'].append(filepath)
 

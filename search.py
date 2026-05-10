@@ -40,9 +40,10 @@ def run_search(query, config):
     est = estimate_cost(context)
     print(f'\n Synthesis cost: ~${est["estimated_cost"]:.4f}')
     confirm = input(' Synthesise answer? [Y/n]').strip().lower()
-    if confirm != 'n':
+    if confirm == 'n':
         print('Showing results only')
         return
+    print('DEBUG: Passed the check, preparing to synth')
     
     with Spinner('Synthesising answer from your notes...', colour = PURPLE) as sp:
         synthesis = synthesise_answer(
