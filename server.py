@@ -1,6 +1,9 @@
 # server.py
+# FastAPI backend for Obsiditube.
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from database import init_db
 
 from routes import settings, goals, process, actions, digest, search, library
 
@@ -10,6 +13,9 @@ app = FastAPI(
     version='1.0.0'
 )
 
+# Init the database tables on startup
+init_db()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],          # accept requests from any origin
@@ -18,6 +24,7 @@ app.add_middleware(
     allow_headers=['*'],          # accept any headers
 )
 
+# e.g. goals.router adds /api/goals/...
 app.include_router(settings.router, prefix='/api')
 app.include_router(goals.router, prefix='/api')
 app.include_router(process.router, prefix='/api')

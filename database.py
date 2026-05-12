@@ -114,7 +114,7 @@ def init_db():
 
 def create_goal_area(name, icon='🎯', color='#818CF8'):
     """Create a new goal area (e.g. Career, Health, Finance)."""
-    conn = get.db()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         'INSERT INTO goal_areas (name, icon, color) VALUES (?, ?, ?)',
