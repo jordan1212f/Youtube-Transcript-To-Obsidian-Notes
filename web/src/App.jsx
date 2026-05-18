@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   Sun,
   Moon,
-  Youtube,
+  Play,
   ChevronRight,
 } from 'lucide-react'
 
@@ -43,10 +43,9 @@ function ThemeProvider({ children }) {
 // ── Navigation items ────────────────────────────────────────────────────────────
 
 const NAV = [
-  { to: '/dashboard', label: 'Dashboard',  Icon: LayoutDashboard },
-  { to: '/library',   label: 'Library',    Icon: BookOpen        },
-  { to: '/search',    label: 'Search',     Icon: Search          },
-  { to: '/actions',   label: 'Actions',    Icon: CheckSquare     },
+  { to: '/home',    label: 'Home',    Icon: LayoutDashboard },
+  { to: '/ask',     label: 'Ask',     Icon: Search          },
+  { to: '/library', label: 'Library', Icon: BookOpen        },
 ]
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────────
@@ -59,7 +58,7 @@ function Sidebar() {
       {/* Logo */}
       <div style={styles.logo}>
         <div style={styles.logoIcon}>
-          <Youtube size={14} strokeWidth={2.5} color="#e8a020" />
+          <Play size={14} strokeWidth={2.5} color="#4A9B8E" />
         </div>
         <span style={styles.logoText}>YT Notes</span>
       </div>
@@ -147,11 +146,10 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
-            <Route path="/library"   element={<Placeholder title="Library" />} />
-            <Route path="/search"    element={<Placeholder title="Search" />} />
-            <Route path="/actions"   element={<Placeholder title="Actions" />} />
+            <Route index element={<Navigate to="/home" replace />} />
+            <Route path="/home"    element={<Placeholder title="Home" />} />
+            <Route path="/ask"     element={<Placeholder title="Ask" />} />
+            <Route path="/library" element={<Placeholder title="Library" />} />
           </Route>
         </Routes>
       </BrowserRouter>
@@ -164,7 +162,7 @@ export default function App() {
 const styles = {
   shell: {
     display: 'flex',
-    height: '100vh',
+    height: '100dvh',
     width: '100%',
     overflow: 'hidden',
     background: 'var(--bg)',

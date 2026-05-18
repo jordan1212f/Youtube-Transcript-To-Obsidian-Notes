@@ -1,47 +1,86 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
 
-/* ── Design tokens ─────────────────────────────────────────── */
+/* ── CSS Variables ────────────────────────────────────────────────────────── */
 :root {
-  /* Dark theme (default) */
-  --bg:           #0e0e10;
-  --surface:      #141416;
-  --surface-2:    #1c1c1f;
-  --border:       #252528;
-  --border-soft:  rgba(255,255,255,0.05);
-
-  --text:         #a09caa;
-  --text-dim:     #5c5968;
-  --text-h:       #eceaf0;
-
-  --amber:        #e8a020;
-  --amber-dim:    rgba(232,160,32,0.12);
-  --amber-glow:   rgba(232,160,32,0.25);
-
-  --sidebar-w:    220px;
-
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
-
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --sidebar-w: 220px;
+  --font-display: 'Lora', Georgia, serif;
+  --font-ui:      'Geist', system-ui, sans-serif;
+  --font-mono:    'Geist Mono', 'Fira Code', monospace;
 }
 
-[data-theme="light"] {
-  --bg:           #f7f5f0;
+/* Dark theme (default) */
+:root, :root[data-theme="dark"] {
+  --bg:           #0f1117;
+  --bg-base:      #0f1117;
+  --bg-surface:   #161b27;
+  --bg-elevated:  #1e2535;
+  --surface:      #161b27;
+
+  --border:       #252d3d;
+  --border-focus: #4A9B8E;
+
+  --text:           #e8eaf0;
+  --text-primary:   #e8eaf0;
+  --text-h:         #e8eaf0;
+  --text-secondary: #8892a4;
+  --text-dim:       #8892a4;
+  --text-muted:     #4f5a6e;
+
+  --accent:       #4A9B8E;
+  --accent-dim:   rgba(74, 155, 142, 0.15);
+  --accent-glow:  rgba(74, 155, 142, 0.3);
+  --accent-text:  #7ec8be;
+  --accent-subtle: rgba(74, 155, 142, 0.12);
+
+  --amber:        #4A9B8E;
+  --amber-dim:    rgba(74, 155, 142, 0.15);
+  --amber-glow:   rgba(74, 155, 142, 0.3);
+
+  --status-green:   #4a9b6f;
+  --status-amber:   #b8862a;
+  --status-red:     #9b4a4a;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --bg:           #f7f8fa;
+  --bg-base:      #f7f8fa;
+  --bg-surface:   #ffffff;
+  --bg-elevated:  #f0f2f5;
   --surface:      #ffffff;
-  --surface-2:    #f0ede8;
-  --border:       #e2ddd8;
-  --border-soft:  rgba(0,0,0,0.06);
 
-  --text:         #6b6470;
-  --text-dim:     #a09aaa;
-  --text-h:       #1a1820;
+  --border:       #dde1e9;
+  --border-focus: #4A9B8E;
 
-  --amber-dim:    rgba(232,160,32,0.08);
-  --amber-glow:   rgba(232,160,32,0.18);
+  --text:           #1a1d26;
+  --text-primary:   #1a1d26;
+  --text-h:         #1a1d26;
+  --text-secondary: #5a6275;
+  --text-dim:       #5a6275;
+  --text-muted:     #9aa0b0;
+
+  --accent:       #4A9B8E;
+  --accent-dim:   rgba(74, 155, 142, 0.10);
+  --accent-glow:  rgba(74, 155, 142, 0.2);
+  --accent-text:  #2d7a70;
+  --accent-subtle: rgba(74, 155, 142, 0.10);
+
+  --amber:        #4A9B8E;
+  --amber-dim:    rgba(74, 155, 142, 0.10);
+  --amber-glow:   rgba(74, 155, 142, 0.2);
+
+  --status-green:   #2d7a50;
+  --status-amber:   #8a6020;
+  --status-red:     #8a3030;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
 }
 
-/* ── Reset ─────────────────────────────────────────────────── */
+/* ── Base reset ───────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -50,35 +89,39 @@
 
 html, body, #root {
   height: 100%;
+  width: 100%;
 }
 
 body {
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text);
-  background: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  color: var(--text-primary);
+  background: var(--bg-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
-#root {
-  display: flex;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  text-align: left;
+/* ── Skeleton shimmer (loading states) ────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-/* ── Scrollbar ─────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; }
+.skeleton {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-elevated) 25%,
+    var(--bg-surface)  50%,
+    var(--bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Scrollbar styling ────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-/* ── Selection ─────────────────────────────────────────────── */
-::selection {
-  background: var(--amber-glow);
-  color: var(--text-h);
-}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
