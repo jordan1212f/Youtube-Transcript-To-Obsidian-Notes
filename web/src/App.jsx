@@ -1,15 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { BrowserRouter, NavLink, Outlet, Routes, Route, Navigate } from 'react-router-dom'
-import {
-  BookOpen,
-  Search,
-  CheckSquare,
-  LayoutDashboard,
-  Sun,
-  Moon,
-  Play,
-  ChevronRight,
-} from 'lucide-react'
+import { BrowserRouter, Outlet, Routes, Route, Navigate } from 'react-router-dom'
+import Sidebar from './components/Sidebar'
 
 // ── Theme context ──────────────────────────────────────────────────────────────
 
@@ -37,76 +28,6 @@ function ThemeProvider({ children }) {
     <ThemeContext.Provider value={{ theme, toggle }}>
       {children}
     </ThemeContext.Provider>
-  )
-}
-
-// ── Navigation items ────────────────────────────────────────────────────────────
-
-const NAV = [
-  { to: '/home',    label: 'Home',    Icon: LayoutDashboard },
-  { to: '/ask',     label: 'Ask',     Icon: Search          },
-  { to: '/library', label: 'Library', Icon: BookOpen        },
-]
-
-// ── Sidebar ─────────────────────────────────────────────────────────────────────
-
-function Sidebar() {
-  const { theme, toggle } = useTheme()
-
-  return (
-    <aside style={styles.sidebar}>
-      {/* Logo */}
-      <div style={styles.logo}>
-        <div style={styles.logoIcon}>
-          <Play size={14} strokeWidth={2.5} color="#4A9B8E" />
-        </div>
-        <span style={styles.logoText}>YT Notes</span>
-      </div>
-
-      {/* Divider */}
-      <div style={styles.divider} />
-
-      {/* Nav */}
-      <nav style={styles.nav}>
-        <p style={styles.navLabel}>Navigate</p>
-        {NAV.map(({ to, label, Icon }) => (
-          <NavLink key={to} to={to} style={({ isActive }) => ({
-            ...styles.navLink,
-            ...(isActive ? styles.navLinkActive : {}),
-          })}>
-            {({ isActive }) => (
-              <>
-                <Icon
-                  size={14}
-                  strokeWidth={isActive ? 2 : 1.5}
-                  style={{ color: isActive ? 'var(--amber)' : 'var(--text-dim)', flexShrink: 0 }}
-                />
-                <span style={{ flex: 1 }}>{label}</span>
-                {isActive && (
-                  <ChevronRight size={10} style={{ color: 'var(--amber)', opacity: 0.7 }} />
-                )}
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div style={styles.sidebarFooter}>
-        <div style={styles.divider} />
-        <button
-          onClick={toggle}
-          style={styles.themeBtn}
-          aria-label="Toggle theme"
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {theme === 'dark'
-            ? <Sun size={13} strokeWidth={1.5} />
-            : <Moon size={13} strokeWidth={1.5} />}
-          <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
-        </button>
-      </div>
-    </aside>
   )
 }
 
@@ -168,111 +89,6 @@ const styles = {
     background: 'var(--bg)',
   },
 
-  // ── Sidebar
-  sidebar: {
-    width: 'var(--sidebar-w)',
-    minWidth: 'var(--sidebar-w)',
-    height: '100%',
-    background: 'var(--surface)',
-    borderRight: '1px solid var(--border)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-
-  logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '22px 20px 20px',
-  },
-
-  logoIcon: {
-    width: '26px',
-    height: '26px',
-    borderRadius: '6px',
-    background: 'var(--amber-dim)',
-    border: '1px solid var(--amber-glow)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-
-  logoText: {
-    fontFamily: 'var(--font-display)',
-    fontSize: '16px',
-    fontWeight: 600,
-    color: 'var(--text-h)',
-    letterSpacing: '-0.3px',
-  },
-
-  divider: {
-    height: '1px',
-    background: 'var(--border)',
-    margin: '0 16px',
-  },
-
-  nav: {
-    flex: 1,
-    padding: '20px 10px 10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  },
-
-  navLabel: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '9px',
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    color: 'var(--text-dim)',
-    padding: '0 10px 8px',
-  },
-
-  navLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px 10px',
-    borderRadius: '6px',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '12px',
-    fontWeight: 400,
-    color: 'var(--text)',
-    textDecoration: 'none',
-    transition: 'background 120ms ease, color 120ms ease',
-    letterSpacing: '0.01em',
-  },
-
-  navLinkActive: {
-    background: 'var(--amber-dim)',
-    color: 'var(--text-h)',
-    fontWeight: 500,
-  },
-
-  sidebarFooter: {
-    padding: '0 0 16px',
-  },
-
-  themeBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    width: '100%',
-    padding: '10px 20px',
-    marginTop: '12px',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'var(--text-dim)',
-    fontFamily: 'var(--font-mono)',
-    fontSize: '11px',
-    letterSpacing: '0.03em',
-    transition: 'color 120ms ease',
-    textAlign: 'left',
-  },
-
   // ── Main
   main: {
     flex: 1,
@@ -294,8 +110,9 @@ const styles = {
   },
 
   mainInner: {
-    padding: '48px 56px',
-    maxWidth: '900px',
+    padding: '40px 48px',
+    maxWidth: '100%',
+    width: '100%',
   },
 
   // ── Placeholder
