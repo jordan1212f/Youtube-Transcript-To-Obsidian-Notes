@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
 
-from routes import settings, goals, process, actions, digest, search, library
+from routes import settings, goals, process, actions, digest, search, library, onboarding
 
 app = FastAPI(
     title='Obsiditube API',
@@ -32,6 +32,7 @@ app.include_router(actions.router, prefix='/api')
 app.include_router(digest.router, prefix='/api')
 app.include_router(search.router, prefix='/api')
 app.include_router(library.router, prefix='/api')
+app.include_router(onboarding.router, prefix='/api')
 
 
 @app.get('/')

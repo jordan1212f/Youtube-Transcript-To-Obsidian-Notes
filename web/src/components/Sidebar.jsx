@@ -1,274 +1,95 @@
 import { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Search, BookOpen, Sun, Moon, Settings } from 'lucide-react'
-import { useTheme } from '../App'
+import { Home, MessageCircle, Library, Plus, Settings } from 'lucide-react'
 
 const NAV = [
-  { to: '/home',    label: 'Home',    Icon: LayoutDashboard },
-  { to: '/ask',     label: 'Ask',     Icon: Search          },
-  { to: '/library', label: 'Library', Icon: BookOpen        },
+  { id: 'home', label: 'Focus', Icon: Home, meta: '⌘1' },
+  { id: 'ask', label: 'Ask', Icon: MessageCircle, meta: '⌘K' },
+  { id: 'library', label: 'Library', Icon: Library, meta: '⌘2' },
 ]
 
-function NavItem({ to, label, Icon }) {
-  const [hovered, setHovered] = useState(false)
-
-  return (
-    <NavLink
-      to={to}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={({ isActive }) => ({
-        ...s.navLink,
-        ...(hovered && !isActive ? s.navLinkHover : {}),
-        ...(isActive ? s.navLinkActive : {}),
-      })}
-    >
-      {({ isActive }) => (
-        <>
-          <Icon
-            size={16}
-            strokeWidth={isActive ? 2 : 1.5}
-            style={{ color: isActive ? 'var(--accent)' : 'var(--text-dim)', flexShrink: 0 }}
-          />
-          <span style={{ flex: 1, color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-            {label}
-          </span>
-        </>
-      )}
-    </NavLink>
-  )
-}
-
-export default function Sidebar() {
-  const { theme, toggle } = useTheme()
-  const [goals, setGoals] = useState([])
-  const [settingsHovered, setSettingsHovered] = useState(false)
-  const [themeHovered, setThemeHovered] = useState(false)
+export default function Sidebar({ route, setRoute, goToGoal, activeGoal, openSettings }) {
+  const [goals, setGoals] = useState(null)
 
   useEffect(() => {
+    let alive = true
     fetch('/api/goals')
-      .then(r => r.json())
-      .then(data => setGoals(Array.isArray(data) ? data : []))
-      .catch(() => {})
+      .then((r) => r.json())
+      .then((data) => {
+        if (alive) setGoals(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {
+        if (alive) setGoals([])
+      })
+    return () => {
+      alive = false
+    }
   }, [])
 
   return (
-    <aside style={s.sidebar}>
-
-      {/* Logo */}
-      <div style={s.logoWrap}>
-        <span style={s.logoText}>Obsiditube</span>
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <span
+          className="wordmark"
+          style={{ fontSize: '30px', fontWeight: 900, letterSpacing: '-0.2px', fontFamily: 'Geist' }}
+        >
+          Clarity.
+        </span>
       </div>
 
-      <div style={s.divider} />
+      <div className="sb-scroll">
+        <nav className="sb-section" style={{ marginTop: 0 }}>
+          {NAV.map(({ id, label, Icon, meta }) => (
+            <button
+              key={id}
+              className={`sb-item ${route === id ? 'active' : ''}`}
+              onClick={() => setRoute(id)}
+            >
+              <Icon className="ico" width={16} height={16} />
+              <span>{label}</span>
+              <span className="meta">{meta}</span>
+            </button>
+          ))}
+        </nav>
 
-      {/* Primary nav */}
-      <nav style={s.nav}>
-        {NAV.map(item => <NavItem key={item.to} {...item} />)}
-      </nav>
+        <div className="sb-section">
+          <div className="sb-section-label">
+            <span className="lbl">Goals</span>
+            <button className="add" title="Add goal">
+              <Plus width={12} height={12} />
+            </button>
+          </div>
 
-      <div style={s.divider} />
+          {goals !== null && goals.length === 0 && (
+            <div style={{ padding: '8px 10px', fontSize: '13px', color: 'var(--fg-4)' }}>
+              No goals yet
+            </div>
+          )}
 
-      {/* Goals */}
-      <section style={s.goalsSection}>
-        <p style={s.goalsLabel}>Goals</p>
-        {goals.length === 0 ? (
-          <p style={s.goalsEmpty}>No goals yet</p>
-        ) : (
-          <ul style={s.goalsList}>
-            {goals.map((goal, i) => (
-              <li key={goal.id ?? i} style={s.goalItem}>
-                <span style={s.goalDot} />
-                <span style={s.goalTitle}>{goal.title ?? goal.name ?? goal}</span>
-              </li>
+          {goals !== null &&
+            goals.map((goal) => (
+              <button
+                key={goal.id}
+                className={`sb-item ${route === 'library' && String(activeGoal) === String(goal.id) ? 'active' : ''}`}
+                onClick={() => goToGoal(goal.id)}
+              >
+                <span className="dot" style={{ background: goal.area_color }}></span>
+                <span>{goal.title}</span>
+                <span className="meta">{goal.content_count}</span>
+              </button>
             ))}
-          </ul>
-        )}
-      </section>
-
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
-
-      {/* Footer */}
-      <div style={s.footer}>
-        <div style={s.divider} />
-
-        <button
-          onClick={toggle}
-          onMouseEnter={() => setThemeHovered(true)}
-          onMouseLeave={() => setThemeHovered(false)}
-          style={{ ...s.footerBtn, ...(themeHovered ? s.footerBtnHover : {}) }}
-          aria-label="Toggle colour scheme"
-        >
-          {theme === 'dark'
-            ? <Sun  size={14} strokeWidth={1.5} style={s.footerIcon} />
-            : <Moon size={14} strokeWidth={1.5} style={s.footerIcon} />}
-          <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
-        </button>
-
-        <button
-          onMouseEnter={() => setSettingsHovered(true)}
-          onMouseLeave={() => setSettingsHovered(false)}
-          onClick={() => console.log('open settings modal')}
-          style={{ ...s.footerBtn, ...(settingsHovered ? s.footerBtnHover : {}) }}
-          aria-label="Settings"
-        >
-          <Settings size={14} strokeWidth={1.5} style={s.footerIcon} />
-          <span>Settings</span>
-        </button>
+        </div>
       </div>
 
+      <div className="sb-foot">
+        <div className="sb-avatar">J</div>
+        <div style={{ minWidth: 0 }}>
+          <div className="name">Jordan</div>
+          <div className="email">j@clarity.app</div>
+        </div>
+        <button className="icon-btn" title="Settings" onClick={openSettings}>
+          <Settings width={14} height={14} />
+        </button>
+      </div>
     </aside>
   )
-}
-
-const s = {
-  sidebar: {
-    width: 'var(--sidebar-w)',
-    minWidth: 'var(--sidebar-w)',
-    height: '100%',
-    background: 'var(--bg-sidebar, var(--surface))',
-    borderRight: '1px solid var(--border)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-
-  logoWrap: {
-    padding: '22px 20px 18px',
-  },
-
-  logoText: {
-    fontFamily: 'var(--font-display)',
-    fontStyle: 'italic',
-    fontSize: '17px',
-    fontWeight: 500,
-    color: 'var(--accent-text)',
-    letterSpacing: '-0.2px',
-  },
-
-  divider: {
-    height: '1px',
-    background: 'var(--border)',
-    margin: '0 16px',
-    flexShrink: 0,
-  },
-
-  nav: {
-    padding: '10px 10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1px',
-  },
-
-  navLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '7px 10px',
-    borderRadius: '6px',
-    fontFamily: 'var(--font-ui)',
-    fontSize: '13px',
-    fontWeight: 400,
-    textDecoration: 'none',
-    transition: 'background 100ms ease',
-    // use box-shadow for left border so it doesn't shift padding
-    boxShadow: 'inset 2px 0 0 transparent',
-  },
-
-  navLinkHover: {
-    background: 'var(--bg-elevated)',
-  },
-
-  navLinkActive: {
-    background: 'var(--accent-subtle)',
-    fontWeight: 500,
-    boxShadow: 'inset 2px 0 0 var(--accent)',
-  },
-
-  // Goals ──────────────────────────────────────────────────────
-  goalsSection: {
-    padding: '14px 20px 10px',
-  },
-
-  goalsLabel: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '10px',
-    fontWeight: 500,
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    color: 'var(--text-muted)',
-    marginBottom: '10px',
-  },
-
-  goalsEmpty: {
-    fontFamily: 'var(--font-ui)',
-    fontSize: '12px',
-    color: 'var(--text-muted)',
-    fontStyle: 'italic',
-  },
-
-  goalsList: {
-    listStyle: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-
-  goalItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '9px',
-  },
-
-  goalDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: 'var(--accent)',
-    flexShrink: 0,
-  },
-
-  goalTitle: {
-    fontFamily: 'var(--font-ui)',
-    fontSize: '12px',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.4,
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-  },
-
-  // Footer ─────────────────────────────────────────────────────
-  footer: {
-    paddingBottom: '8px',
-    flexShrink: 0,
-  },
-
-  footerBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '9px',
-    width: '100%',
-    padding: '8px 20px',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'var(--text-muted)',
-    fontFamily: 'var(--font-ui)',
-    fontSize: '12px',
-    letterSpacing: '0.01em',
-    transition: 'color 100ms ease, background 100ms ease',
-    textAlign: 'left',
-  },
-
-  footerBtnHover: {
-    color: 'var(--text-secondary)',
-    background: 'var(--bg-elevated)',
-  },
-
-  footerIcon: {
-    flexShrink: 0,
-    color: 'inherit',
-  },
 }

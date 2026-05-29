@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 from datetime import datetime, date
 
-DB_PATH = Path.home() / '.yt_notes' / 'obsiditube.db'
+DB_PATH = Path.home() / '.yt-note' / 'obsiditube.db'
 
 def get_db():
     """Get a database connection with sensible defaults.
@@ -104,7 +104,19 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now'))
         )
     ''')
- 
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_profile (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT DEFAULT '',
+            problem_statements TEXT DEFAULT '[]',
+            goal_ids TEXT DEFAULT '[]',
+            digest_time TEXT DEFAULT 'evening',
+            onboarded_at TEXT DEFAULT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -423,5 +435,61 @@ def calculate_streak(date_strings):
             streak += 1
         else:
             break
- 
+
     return streak
+
+# ──────────────────────────────────────────
+# User Profile
+# ──────────────────────────────────────────
+
+def save_onboarding(data):
+    """Insert or replace the single user profile row.
+
+    V1 is single-user, so we always write to id=1. `data` is a dict with
+    keys: name, problem_statements (list), goal_ids (list), digest_time.
+    Lists are stored as JSON strings. onboarded_at is set to now.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT OR REPLACE INTO user_profile
+        (id, name, problem_statements, goal_ids, digest_time, onboarded_at)
+        VALUES (1, ?, ?, ?, ?, datetime('now'))
+    ''', (
+        data.get('name', ''),
+        json.dumps(data.get('problem_statements', [])),
+        json.dumps(data.get('goal_ids', [])),
+        data.get('digest_time', 'evening'),
+    ))
+    conn.commit()
+    conn.close()
+
+def get_user_profile():
+    """Get the user profile row, or None if not onboarded.
+
+    Parses problem_statements and goal_ids from JSON strings back to lists.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM user_profile WHERE id = 1')
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    profile = dict(row)
+    profile['problem_statements'] = json.loads(profile.get('problem_statements', '[]'))
+    profile['goal_ids'] = json.loads(profile.get('goal_ids', '[]'))
+    return profile
+
+def is_onboarded():
+    """Return True if a user profile row exists with onboarded_at set."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        'SELECT 1 FROM user_profile WHERE id = 1 AND onboarded_at IS NOT NULL'
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None

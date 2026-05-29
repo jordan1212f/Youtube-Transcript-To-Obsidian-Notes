@@ -1,141 +1,143 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import { BrowserRouter, Outlet, Routes, Route, Navigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
+import Home from './components/Home'
+import Library from './components/Library'
+import Ask from './components/Ask'
+import Detail from './components/Detail'
+import Onboarding from './components/Onboarding'
+import ProcessingOverlay from './components/ProcessingOverlay'
+import SettingsModal from './components/SettingsModal'
+import AddModal from './components/AddModal'
+import { useTheme } from './hooks/useTheme'
+import './styles/globals.css'
 
-// ── Theme context ──────────────────────────────────────────────────────────────
-
-const ThemeContext = createContext(null)
-
-export function useTheme() {
-  return useContext(ThemeContext)
-}
-
-function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('yt-notes-theme')
-    if (saved) return saved
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  })
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('yt-notes-theme', theme)
-  }, [theme])
-
-  const toggle = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'))
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  )
-}
-
-// ── Layout shell ────────────────────────────────────────────────────────────────
-
-function Layout() {
-  return (
-    <div style={styles.shell}>
-      <Sidebar />
-      <main style={styles.main}>
-        {/* Subtle top-edge ambient glow */}
-        <div style={styles.ambientGlow} />
-        <div style={styles.mainInner}>
-          <Outlet />
-        </div>
-      </main>
-    </div>
-  )
-}
-
-// ── Placeholder pages (replace with real routes later) ──────────────────────────
-
-function Placeholder({ title }) {
-  return (
-    <div style={styles.placeholder}>
-      <p style={styles.placeholderLabel}>Coming soon</p>
-      <h1 style={styles.placeholderTitle}>{title}</h1>
-    </div>
-  )
-}
-
-// ── App root ────────────────────────────────────────────────────────────────────
+const MOTTOS = [
+  'Small reps. Real progress.',
+  'Turn input into action.',
+  'Your library, working for you.',
+  'Less saving. More doing.',
+]
 
 export default function App() {
+  const { theme, setTheme, accent, setAccent, fontset, setFontset } = useTheme()
+
+  const [route, setRoute] = useState('home')
+  const [detailId, setDetailId] = useState(null)
+  const [showAdd, setShowAdd] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [processingSrc, setProcessingSrc] = useState(null)
+  const [goalFilter, setGoalFilter] = useState('all')
+  const [onboarded, setOnboarded] = useState(null)
+  const [motto] = useState(() => MOTTOS[Math.floor(Math.random() * MOTTOS.length)])
+
+  useEffect(() => {
+    fetch('/api/onboarding/status')
+      .then(r => r.json())
+      .then(data => setOnboarded(Boolean(data?.onboarded)))
+      .catch(() => setOnboarded(true))
+  }, [])
+
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        document.querySelector('.search-bar input')?.focus()
+      }
+      if (e.key === 'Escape') {
+        if (showAdd) setShowAdd(false)
+        else if (showSettings) setShowSettings(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showAdd, showSettings])
+
+  function goToGoal(catId) {
+    setGoalFilter(catId || 'all')
+    setRoute('library')
+    setDetailId(null)
+  }
+
+  function openDetail(id) {
+    setDetailId(id)
+    setRoute('detail')
+  }
+
+  function back() {
+    setDetailId(null)
+    setRoute('home')
+  }
+
+  if (onboarded === null) return null
+
+  if (!onboarded) {
+    return <Onboarding onDone={() => setOnboarded(true)} />
+  }
+
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route index element={<Navigate to="/home" replace />} />
-            <Route path="/home"    element={<Placeholder title="Home" />} />
-            <Route path="/ask"     element={<Placeholder title="Ask" />} />
-            <Route path="/library" element={<Placeholder title="Library" />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+    <div className="app">
+      <Sidebar
+        route={route === 'detail' ? 'home' : route}
+        setRoute={setRoute}
+        goToGoal={goToGoal}
+        activeGoal={goalFilter}
+        openSettings={() => setShowSettings(true)}
+      />
+      <main className="main">
+        {route === 'home' && (
+          <Home
+            setRoute={setRoute}
+            openDetail={openDetail}
+            openAdd={() => setShowAdd(true)}
+            motto={motto}
+          />
+        )}
+        {route === 'library' && (
+          <Library
+            openDetail={openDetail}
+            openAdd={() => setShowAdd(true)}
+            initialFilter={goalFilter}
+            onFilterChange={setGoalFilter}
+          />
+        )}
+        {route === 'ask' && <Ask />}
+        {route === 'detail' && (
+          <Detail contentId={detailId} back={back} goToGoal={goToGoal} />
+        )}
+      </main>
+
+      {showAdd && (
+        <AddModal
+          onClose={() => setShowAdd(false)}
+          onAdd={() => setRoute('home')}
+          onProcess={(src) => {
+            setShowAdd(false)
+            setProcessingSrc(src || { title: 'Your saved content', source: 'youtube.com', type: 'video' })
+          }}
+        />
+      )}
+
+      {processingSrc && (
+        <ProcessingOverlay
+          source={processingSrc}
+          onComplete={() => {
+            setProcessingSrc(null)
+            openDetail('c1')
+          }}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          theme={theme}
+          setTheme={setTheme}
+          accent={accent}
+          setAccent={setAccent}
+          fontset={fontset}
+          setFontset={setFontset}
+        />
+      )}
+    </div>
   )
-}
-
-// ── Inline styles (theme-aware via CSS variables) ───────────────────────────────
-
-const styles = {
-  shell: {
-    display: 'flex',
-    height: '100dvh',
-    width: '100%',
-    overflow: 'hidden',
-    background: 'var(--bg)',
-  },
-
-  // ── Main
-  main: {
-    flex: 1,
-    height: '100%',
-    overflow: 'hidden auto',
-    position: 'relative',
-    background: 'var(--bg)',
-  },
-
-  ambientGlow: {
-    position: 'sticky',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '1px',
-    background: 'linear-gradient(90deg, transparent 0%, var(--amber-glow) 50%, transparent 100%)',
-    zIndex: 10,
-    pointerEvents: 'none',
-  },
-
-  mainInner: {
-    padding: '40px 48px',
-    maxWidth: '100%',
-    width: '100%',
-  },
-
-  // ── Placeholder
-  placeholder: {
-    paddingTop: '80px',
-  },
-
-  placeholderLabel: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '10px',
-    letterSpacing: '0.14em',
-    textTransform: 'uppercase',
-    color: 'var(--amber)',
-    marginBottom: '12px',
-    opacity: 0.8,
-  },
-
-  placeholderTitle: {
-    fontFamily: 'var(--font-display)',
-    fontSize: '52px',
-    fontWeight: 500,
-    color: 'var(--text-h)',
-    letterSpacing: '-1.5px',
-    lineHeight: 1.05,
-  },
 }
