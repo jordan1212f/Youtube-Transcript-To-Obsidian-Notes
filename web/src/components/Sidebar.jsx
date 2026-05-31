@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Home, MessageCircle, Library, Plus, Settings } from 'lucide-react'
+import { GoalIcon, AskIcon, LibraryIcon, AddIcon, SettingsIcon } from './Icons'
 
 const NAV = [
-  { id: 'home', label: 'Focus', Icon: Home, meta: '⌘1' },
-  { id: 'ask', label: 'Ask', Icon: MessageCircle, meta: '⌘K' },
-  { id: 'library', label: 'Library', Icon: Library, meta: '⌘2' },
+  { id: 'home', label: 'Focus', Icon: GoalIcon, meta: '⌘1' },
+  { id: 'ask', label: 'Ask', Icon: AskIcon, meta: '⌘K' },
+  { id: 'library', label: 'Library', Icon: LibraryIcon, meta: '⌘2' },
 ]
 
 export default function Sidebar({ route, setRoute, goToGoal, activeGoal, openSettings }) {
@@ -55,7 +55,7 @@ export default function Sidebar({ route, setRoute, goToGoal, activeGoal, openSet
           <div className="sb-section-label">
             <span className="lbl">Goals</span>
             <button className="add" title="Add goal">
-              <Plus width={12} height={12} />
+              <AddIcon width={12} height={12} />
             </button>
           </div>
 
@@ -87,7 +87,7 @@ export default function Sidebar({ route, setRoute, goToGoal, activeGoal, openSet
           <div className="email">j@clarity.app</div>
         </div>
         <button className="icon-btn" title="Settings" onClick={openSettings}>
-          <Settings width={14} height={14} />
+          <SettingsIcon width={14} height={14} />
         </button>
       </div>
     </aside>
