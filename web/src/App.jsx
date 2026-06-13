@@ -1,15 +1,21 @@
-import { useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
-import Home from './components/Home'
-import Library from './components/Library'
-import Ask from './components/Ask'
-import Detail from './components/Detail'
-import Onboarding from './components/Onboarding'
-import ProcessingOverlay from './components/ProcessingOverlay'
-import SettingsModal from './components/SettingsModal'
-import AddModal from './components/AddModal'
-import { useTheme } from './hooks/useTheme'
-import './styles/globals.css'
+
+/* ============================================================
+   Accent presets — each maps a name to the CSS custom property
+   values that drive the whole accent system. Switching accent
+   means writing these onto document.documentElement.style.
+   ============================================================ */
+export const ACCENT_PRESETS = {
+  teal:   { accent: '#4A9B8E', bright: '#6FE8CC', accentRgb: '74, 155, 142',  brightRgb: '111, 232, 204' },
+  sage:   { accent: '#7BAE7E', bright: '#A8E0AC', accentRgb: '123, 174, 126', brightRgb: '168, 224, 172' },
+  amber:  { accent: '#C99B5C', bright: '#E5B86F', accentRgb: '201, 155, 92',  brightRgb: '229, 184, 111' },
+  indigo: { accent: '#5879B9', bright: '#9CB7E8', accentRgb: '88, 121, 185',  brightRgb: '156, 183, 232' },
+  rose:   { accent: '#C9788C', bright: '#F2A8BD', accentRgb: '201, 120, 140', brightRgb: '242, 168, 189' },
+  mauve:  { accent: '#A68FBE', bright: '#D4B8E8', accentRgb: '166, 143, 190', brightRgb: '212, 184, 232' },
+}
+
+export const FONTSETS = ['modern', 'editorial', 'soft']
 
 const MOTTOS = [
   'Small reps. Real progress.',
@@ -18,126 +24,147 @@ const MOTTOS = [
   'Less saving. More doing.',
 ]
 
+/* ============================================================
+   Theme context — theme (dark/light), accent, fontset.
+   Applied to <html> via data-theme / data-fontset attributes
+   and CSS custom properties for the accent.
+   ============================================================ */
+const ThemeContext = createContext(null)
+
+export function useTheme() {
+  const ctx = useContext(ThemeContext)
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
+  return ctx
+}
+
+function useThemeState() {
+  const [theme, setTheme] = useState('dark')      // 'dark' | 'light'
+  const [accent, setAccent] = useState('teal')    // key of ACCENT_PRESETS
+  const [fontset, setFontset] = useState('modern') // 'modern' | 'editorial' | 'soft'
+
+  // Theme + fontset are data attributes on <html>; CSS selectors key off them.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-fontset', fontset)
+  }, [fontset])
+
+  // Accent switches by writing CSS custom properties onto the root element.
+  useEffect(() => {
+    const preset = ACCENT_PRESETS[accent] || ACCENT_PRESETS.teal
+    const root = document.documentElement
+    root.style.setProperty('--accent', preset.accent)
+    root.style.setProperty('--accent-bright', preset.bright)
+    root.style.setProperty('--accent-rgb', preset.accentRgb)
+    root.style.setProperty('--accent-bright-rgb', preset.brightRgb)
+  }, [accent])
+
+  return { theme, setTheme, accent, setAccent, fontset, setFontset }
+}
+
+/* ============================================================
+   Layout shell — sidebar + main content grid (.app provides the
+   CSS grid: var(--sidebar-w) 1fr). Routes between 3 pages.
+   Sidebar and page content are placeholders for now.
+   ============================================================ */
 export default function App() {
-  const { theme, setTheme, accent, setAccent, fontset, setFontset } = useTheme()
+  const themeApi = useThemeState()
 
   const [route, setRoute] = useState('home')
-  const [detailId, setDetailId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [processingSrc, setProcessingSrc] = useState(null)
-  const [goalFilter, setGoalFilter] = useState('all')
-  const [onboarded, setOnboarded] = useState(null)
   const [motto] = useState(() => MOTTOS[Math.floor(Math.random() * MOTTOS.length)])
 
-  useEffect(() => {
-    fetch('/api/onboarding/status')
-      .then(r => r.json())
-      .then(data => setOnboarded(Boolean(data?.onboarded)))
-      .catch(() => setOnboarded(true))
+  const closeModals = useCallback(() => {
+    setShowAdd(false)
+    setShowSettings(false)
   }, [])
 
+  // Keyboard: ⌘K / Ctrl+K focuses the search input, Escape closes modals.
   useEffect(() => {
     function onKey(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         document.querySelector('.search-bar input')?.focus()
       }
-      if (e.key === 'Escape') {
-        if (showAdd) setShowAdd(false)
-        else if (showSettings) setShowSettings(false)
-      }
+      if (e.key === 'Escape') closeModals()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [showAdd, showSettings])
-
-  function goToGoal(catId) {
-    setGoalFilter(catId || 'all')
-    setRoute('library')
-    setDetailId(null)
-  }
-
-  function openDetail(id) {
-    setDetailId(id)
-    setRoute('detail')
-  }
-
-  function back() {
-    setDetailId(null)
-    setRoute('home')
-  }
-
-  if (onboarded === null) return null
-
-  if (!onboarded) {
-    return <Onboarding onDone={() => setOnboarded(true)} />
-  }
+  }, [closeModals])
 
   return (
-    <div className="app">
-      <Sidebar
-        route={route === 'detail' ? 'home' : route}
-        setRoute={setRoute}
-        goToGoal={goToGoal}
-        activeGoal={goalFilter}
-        openSettings={() => setShowSettings(true)}
-      />
-      <main className="main">
-        {route === 'home' && (
-          <Home
-            setRoute={setRoute}
-            openDetail={openDetail}
-            openAdd={() => setShowAdd(true)}
-            motto={motto}
-          />
-        )}
-        {route === 'library' && (
-          <Library
-            openDetail={openDetail}
-            openAdd={() => setShowAdd(true)}
-            initialFilter={goalFilter}
-            onFilterChange={setGoalFilter}
-          />
-        )}
-        {route === 'ask' && <Ask />}
-        {route === 'detail' && (
-          <Detail contentId={detailId} back={back} goToGoal={goToGoal} />
-        )}
-      </main>
-
-      {showAdd && (
-        <AddModal
-          onClose={() => setShowAdd(false)}
-          onAdd={() => setRoute('home')}
-          onProcess={(src) => {
-            setShowAdd(false)
-            setProcessingSrc(src || { title: 'Your saved content', source: 'youtube.com', type: 'video' })
-          }}
+    <ThemeContext.Provider value={themeApi}>
+      <div className="app">
+        <Sidebar
+          route={route}
+          setRoute={setRoute}
+          openSettings={() => setShowSettings(true)}
         />
-      )}
 
-      {processingSrc && (
-        <ProcessingOverlay
-          source={processingSrc}
-          onComplete={() => {
-            setProcessingSrc(null)
-            openDetail('c1')
-          }}
-        />
-      )}
+        {/* --- Main content area (page components built next) --- */}
+        <main className="main dot-bg" data-screen-label={`02 ${route}`}>
+          <div className="main-inner">
+            {route === 'home' && (
+              <section>
+                <div className="eyebrow">/ focus</div>
+                <h1 className="home-title welcome">Home</h1>
+                <p className="home-motto">{motto}</p>
+                <div className="search-bar">
+                  <input placeholder="Search your library…" />
+                  <span className="kbd">⌘K</span>
+                </div>
+                <p className="home-motto" style={{ marginTop: 24 }}>
+                  Home placeholder — FocusCard, WeeklyStats and recents go here.
+                </p>
+              </section>
+            )}
 
-      {showSettings && (
-        <SettingsModal
-          onClose={() => setShowSettings(false)}
-          theme={theme}
-          setTheme={setTheme}
-          accent={accent}
-          setAccent={setAccent}
-          fontset={fontset}
-          setFontset={setFontset}
-        />
-      )}
-    </div>
+            {route === 'ask' && (
+              <section>
+                <div className="eyebrow">/ ask</div>
+                <h1 className="home-title welcome">Ask</h1>
+                <p className="home-motto">Ask placeholder — chat UI goes here.</p>
+              </section>
+            )}
+
+            {route === 'library' && (
+              <section>
+                <div className="eyebrow">/ library</div>
+                <h1 className="home-title welcome">Library</h1>
+                <p className="home-motto">Library placeholder — filterable card grid goes here.</p>
+              </section>
+            )}
+          </div>
+        </main>
+
+        {/* Modal placeholders — Escape closes whichever is open. */}
+        {showAdd && (
+          <div className="scrim" onClick={closeModals}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-head">
+                <h2>Add</h2>
+                <button className="close" onClick={closeModals} aria-label="Close">✕</button>
+              </div>
+              <p className="home-motto">AddModal placeholder.</p>
+            </div>
+          </div>
+        )}
+
+        {showSettings && (
+          <div className="scrim" onClick={closeModals}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-head">
+                <h2>Settings</h2>
+                <button className="close" onClick={closeModals} aria-label="Close">✕</button>
+              </div>
+              <p className="home-motto">SettingsModal placeholder — theme, accent and font pickers go here.</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </ThemeContext.Provider>
   )
 }
