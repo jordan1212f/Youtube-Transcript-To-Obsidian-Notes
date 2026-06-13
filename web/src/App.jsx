@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
+import Home from './components/Home'
 
 /* ============================================================
    Accent presets — each maps a name to the CSS custom property
@@ -104,40 +105,37 @@ export default function App() {
           openSettings={() => setShowSettings(true)}
         />
 
-        {/* --- Main content area (page components built next) --- */}
+        {/* --- Main content area --- */}
         <main className="main dot-bg" data-screen-label={`02 ${route}`}>
-          <div className="main-inner">
-            {route === 'home' && (
-              <section>
-                <div className="eyebrow">/ focus</div>
-                <h1 className="home-title welcome">Home</h1>
-                <p className="home-motto">{motto}</p>
-                <div className="search-bar">
-                  <input placeholder="Search your library…" />
-                  <span className="kbd">⌘K</span>
-                </div>
-                <p className="home-motto" style={{ marginTop: 24 }}>
-                  Home placeholder — FocusCard, WeeklyStats and recents go here.
-                </p>
-              </section>
-            )}
+          {route === 'home' && (
+            <Home
+              setRoute={setRoute}
+              openAdd={() => setShowAdd(true)}
+              // No Detail route yet — fall back to Library until it exists.
+              openDetail={() => setRoute('library')}
+              motto={motto}
+            />
+          )}
 
-            {route === 'ask' && (
-              <section>
-                <div className="eyebrow">/ ask</div>
-                <h1 className="home-title welcome">Ask</h1>
-                <p className="home-motto">Ask placeholder — chat UI goes here.</p>
-              </section>
-            )}
+          {route !== 'home' && (
+            <div className="main-inner">
+              {route === 'ask' && (
+                <section>
+                  <div className="eyebrow">/ ask</div>
+                  <h1 className="home-title welcome">Ask</h1>
+                  <p className="home-motto">Ask placeholder — chat UI goes here.</p>
+                </section>
+              )}
 
-            {route === 'library' && (
-              <section>
-                <div className="eyebrow">/ library</div>
-                <h1 className="home-title welcome">Library</h1>
-                <p className="home-motto">Library placeholder — filterable card grid goes here.</p>
-              </section>
-            )}
-          </div>
+              {route === 'library' && (
+                <section>
+                  <div className="eyebrow">/ library</div>
+                  <h1 className="home-title welcome">Library</h1>
+                  <p className="home-motto">Library placeholder — filterable card grid goes here.</p>
+                </section>
+              )}
+            </div>
+          )}
         </main>
 
         {/* Modal placeholders — Escape closes whichever is open. */}

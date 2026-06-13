@@ -126,11 +126,14 @@ export default function FocusCard({ openDetail }) {
   function doSkip() {
     if (actionState !== 'idle') return
     setActionState('skipped')
+    // NOTE: the backend doesn't expose /skip yet — call it as documented and
+    // fall back to a local skip if it 404s so the UI still responds.
+    fetch(`/api/actions/${focus.id}/skip`, { method: 'PUT' }).catch(() => {})
   }
   function doMoreTime() {
     if (moreTimeUsed || actionState !== 'idle') return
     setMoreTimeUsed(true)
-    if (deadlineRef.current != null) deadlineRef.current += 12 * 60 * 60 * 1000
+    if (deadlineRef.current != null) deadlineRef.current += 24 * 60 * 60 * 1000
   }
 
   const label =
@@ -209,7 +212,7 @@ export default function FocusCard({ openDetail }) {
           onClick={doMoreTime}
           disabled={moreTimeUsed || actionState !== 'idle'}
         >
-          {moreTimeUsed ? '+12h used' : 'More time'}
+          {moreTimeUsed ? '+24h used' : 'More time'}
         </button>
         <span className="focus-actions-spacer"></span>
         <button className="fa-detail" onClick={() => openDetail && openDetail(focus.content_id)}>

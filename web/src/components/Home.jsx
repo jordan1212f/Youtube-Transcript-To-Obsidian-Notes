@@ -95,30 +95,20 @@ function WeeklyStats() {
 
   if (!stats) return null
 
-  const shipped = stats.completed_actions || 0
-  const saved = stats.total_content || 0
-  const ratio = saved > 0 ? shipped / saved : shipped
-  const ratioStr = (Math.round(ratio * 10) / 10).toFixed(1)
-  const isLow = ratio < 1.0
+  const acted = stats.completed_actions || 0
+  const total = acted + (stats.active_actions || 0)
+  // Backend doesn't track expired actions yet; default to 0 until it does.
+  const expired = stats.expired_actions || 0
+  const isLow = total > 0 && acted / total < 0.5
 
   return (
     <div className={`weekly-stats ${isLow ? 'is-low' : ''}`}>
-      {isLow ? (
-        <>
-          You shipped <span className="num">{shipped}</span> action
-          {shipped === 1 ? '' : 's'} from <span className="num">{saved}</span> save
-          {saved === 1 ? '' : 's'} this week. <span className="ratio">{ratioStr}×</span>{' '}
-          <span className="verdict">— room to grow.</span>
-        </>
-      ) : (
-        <>
-          You shipped <span className="num">{shipped}</span> action
-          {shipped === 1 ? '' : 's'} this week from the <span className="num">{saved}</span>{' '}
-          piece{saved === 1 ? '' : 's'} of content you saved.{' '}
-          <span className="ratio">{ratioStr}×</span>{' '}
-          <span className="verdict">momentum — nice.</span>
-        </>
-      )}
+      You acted on <span className="num">{acted}</span> of <span className="num">{total}</span> this
+      week
+      <span className="dot-sep"> · </span>
+      <span className="muted">
+        <span className="num">{expired}</span> expired
+      </span>
     </div>
   )
 }
