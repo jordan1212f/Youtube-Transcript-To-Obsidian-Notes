@@ -109,10 +109,10 @@ function ProcessingOverlay({ source, goalLabel, goalPills, onComplete, reveal, o
           <RevealActionCard goalLabel={goalLabel} />
           {goalPills && goalPills.length > 0 && (
             <div className="onboard-preview-goals">
-              {goalPills.map((n, i) => (
+              {goalPills.map((g, i) => (
                 <span className="tag" key={i}>
-                  <span className="dot" style={{ background: 'var(--accent-bright)' }}></span>
-                  {n}
+                  <span className="dot" style={{ background: g.color || 'var(--accent-bright)' }}></span>
+                  {g.name || g}
                 </span>
               ))}
             </div>
@@ -154,7 +154,11 @@ function ProcessingOverlay({ source, goalLabel, goalPills, onComplete, reveal, o
                   {i < stage ? <Ico.check width={11} height={11} /> : String(i + 1)}
                 </span>
                 <span className="label">{label}</span>
-                <span className="pulse-bar"></span>
+                <span className="stage-end">
+                  {i < stage
+                    ? <Ico.check className="stage-check" width={14} height={14} />
+                    : <span className="stage-bar"><span className="stage-bar-fill"></span></span>}
+                </span>
               </div>
             );
           })}

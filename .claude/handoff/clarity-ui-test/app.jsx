@@ -22,12 +22,18 @@ function App() {
 
   const [route, setRoute] = React.useState('home');
   const [detailId, setDetailId] = React.useState(null);
+  const [goalDetailId, setGoalDetailId] = React.useState(null);
   const [showAdd, setShowAdd] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
   const [processingSrc, setProcessingSrc] = React.useState(null); // {title,source,type,...} | null
   const [motto] = React.useState(() => MOTTOS[Math.floor(Math.random() * MOTTOS.length)]);
   const [goalFilter, setGoalFilter] = React.useState('all'); // category id selected from sidebar / detail
-  const [onboarded, setOnboarded] = React.useState(true); // toggle false via tweaks to re-run onboarding
+  const [onboarded, setOnboarded] = React.useState(false); // toggle false via tweaks to re-run onboarding
+
+  function openGoal(goalId) {
+    setGoalDetailId(goalId);
+    setRoute('goalDetail');
+  }
 
   function goToGoal(catId) {
     setGoalFilter(catId || 'all');
@@ -81,7 +87,7 @@ function App() {
   if (!onboarded) {
     return (
       <>
-        <Onboarding onDone={() => setOnboarded(true)} />
+        <Onboarding onDone={() => setOnboarded(true)} setTweak={setTweak} />
         <TweakPanel tweaks={tweaks} setTweak={setTweak} onboarded={onboarded} setOnboarded={setOnboarded} />
       </>
     );
@@ -93,7 +99,9 @@ function App() {
         route={route === 'detail' ? 'home' : route}
         setRoute={setRoute}
         goToGoal={goToGoal}
+        openGoal={openGoal}
         activeGoal={goalFilter}
+        activeGoalId={route === 'goalDetail' ? goalDetailId : null}
         openSettings={() => setShowSettings(true)}
       />
       <main className="main" data-screen-label={`02 ${route}`}>
@@ -114,7 +122,9 @@ function App() {
           />
         )}
         {route === 'ask' && <AskStub />}
+        {route === 'archive' && <Archive />}
         {route === 'detail' && <Detail contentId={detailId} back={back} goToGoal={goToGoal} />}
+        {route === 'goalDetail' && <GoalDetail goalId={goalDetailId} back={back} goToGoal={goToGoal} openDetail={openDetail} />}
       </main>
 
       {showAdd && (

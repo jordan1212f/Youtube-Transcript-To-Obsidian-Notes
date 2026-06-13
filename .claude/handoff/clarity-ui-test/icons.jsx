@@ -20,6 +20,7 @@ const Ico = {
   filter: (p) => <svg {..._icoProps} {...p}><path d="M3 5h18M6 12h12M10 19h4"/></svg>,
   arrow: (p) => <svg {..._icoProps} {...p}><path d="M5 12h14m-5-5 5 5-5 5"/></svg>,
   arrowLeft: (p) => <svg {..._icoProps} {...p}><path d="M19 12H5m5 5-5-5 5-5"/></svg>,
+  plus: (p) => <svg {..._icoProps} {...p}><path d="M12 5v14M5 12h14"/></svg>,
   play: (p) => <svg {..._icoProps} {...p} fill="currentColor" stroke="none"><path d="M8 5v14l12-7z"/></svg>,
   pdf: (p) => <svg {..._icoProps} {...p}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>,
   link: (p) => <svg {..._icoProps} {...p}><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>,
@@ -36,6 +37,16 @@ const Ico = {
   flame: (p) => <svg {..._icoProps} {...p}><path d="M12 3c2 4 5 5 5 9a5 5 0 1 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-8Z"/></svg>,
   more: (p) => <svg {..._icoProps} {...p}><circle cx="12" cy="6" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="18" r="1.2" fill="currentColor"/></svg>,
   chevDown: (p) => <svg {..._icoProps} {...p}><path d="m6 9 6 6 6-6"/></svg>,
+
+  // --- notes formatting toolbar (cohesive monoline set) ---
+  fmtBold: (p) => <svg {..._icoProps} {...p} strokeWidth="1.9"><path d="M8 5h5.2a3.2 3.2 0 0 1 0 6.5H8z"/><path d="M8 11.5h6a3.2 3.2 0 0 1 0 6.5H8z"/></svg>,
+  fmtItalic: (p) => <svg {..._icoProps} {...p}><path d="M11 5h6M7 19h6M14.5 5 9.5 19"/></svg>,
+  fmtUnderline: (p) => <svg {..._icoProps} {...p}><path d="M7 4v7a5 5 0 0 0 10 0V4"/><path d="M6 20h12"/></svg>,
+  fmtStrike: (p) => <svg {..._icoProps} {...p}><path d="M5 12h14"/><path d="M15.5 8.2C15.2 6.6 13.7 5.6 12 5.6c-2 0-3.6 1-3.6 2.6 0 1.1.8 1.8 2 2.3"/><path d="M8.4 15.4c0 1.8 1.7 3 3.9 3 2 0 3.6-1 3.6-2.7"/></svg>,
+  fmtHighlight: (p) => <svg {..._icoProps} {...p}><path d="M5 21h5"/><path d="m9 14 4 4"/><path d="M14.5 4.5 19.5 9.5 12 17l-4.5 1 1-4.5 6-9z"/></svg>,
+  fmtBullet: (p) => <svg {..._icoProps} {...p}><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.15" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.15" fill="currentColor" stroke="none"/></svg>,
+  fmtNumber: (p) => <svg {..._icoProps} {...p}><path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 4.5 5.2 4v4.2" strokeWidth="1.4"/><path d="M3.4 11.1c.3-.6 1.7-.7 2 .1.3.8-1.9 1.6-2 3h2.1" strokeWidth="1.4"/><path d="M3.5 16.2c1-.6 2.2 0 2 1-.1.6-.8.7-1 .7.3 0 1.1.1 1.1.9.1.9-1.3 1.4-2.2.8" strokeWidth="1.4"/></svg>,
+  fmtCheck: (p) => <svg {..._icoProps} {...p}><path d="M11 6h9M11 12h9M11 18h9"/><rect x="2.5" y="4" width="5" height="5" rx="1.2"/><path d="m3.4 13.1 1.3 1.3L7.4 11.8" strokeWidth="1.7"/></svg>,
 };
 
 window.Ico = Ico;

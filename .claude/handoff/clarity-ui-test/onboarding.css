@@ -1,0 +1,1595 @@
+/* ============================================================
+   CLARITY — ONBOARDING (full rewrite)
+   New theme picker, name step, timed interstitials + SVG graphics.
+   Builds on existing .onboard-* tokens in styles.css.
+   ============================================================ */
+
+/* --- step entry animation (per spec: translateY(6px) + opacity, 280ms) --- */
+.onboard-step {
+  animation: stepIn 280ms var(--ease);
+}
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.onboard-shell {
+  transition: color 320ms var(--ease);
+}
+
+/* ============================================================
+   STEP 0 — THEME PICKER
+   ============================================================ */
+.theme-picker {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.theme-card {
+  flex: 1;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms var(--ease), background 160ms var(--ease), transform 160ms var(--ease);
+}
+.theme-card:hover {
+  border-color: var(--hairline-hover);
+  transform: translateY(-2px);
+}
+.theme-card.on {
+  border-color: var(--accent-bright);
+  background: var(--accent-soft);
+}
+/* mini app preview — uses each theme's LITERAL colours, not active vars */
+.theme-preview {
+  height: 200px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.theme-preview.is-light { border-color: rgba(0, 0, 0, 0.08); }
+.theme-preview .tp-swatch {
+  height: 26px;
+  border-radius: 6px;
+}
+.theme-preview .tp-bar {
+  height: 7px;
+  border-radius: 999px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.theme-preview .tp-bar .tp-fill {
+  position: absolute;
+  inset: 0;
+  width: 64%;
+  border-radius: 999px;
+}
+.theme-preview .tp-heading {
+  font-size: 26px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-top: auto;
+}
+.theme-preview .tp-sub {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.theme-card .tp-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  color: var(--fg-3);
+  text-align: center;
+}
+.theme-card.on .tp-label { color: var(--accent-bright); }
+
+/* ============================================================
+   STEP 1 — NAME
+   ============================================================ */
+.name-field {
+  margin-top: 14px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.name-field input {
+  width: 100%;
+  max-width: 460px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--hairline-2);
+  outline: 0;
+  color: var(--fg);
+  font-size: 22px;
+  text-align: center;
+  letter-spacing: -0.01em;
+  padding: 14px 0;
+  transition: border-color 200ms var(--ease);
+}
+.name-field input::placeholder { color: var(--fg-4); }
+.name-field input:focus { border-bottom-color: var(--accent-bright); }
+
+/* ============================================================
+   STEP 4 — GOAL TYPING (rows with coloured dot)
+   ============================================================ */
+.goal-row .goal-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--fg-2);
+  letter-spacing: -0.005em;
+}
+.goal-row .goal-label .gdot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   STEP 5 — PASTE URL
+   ============================================================ */
+.url-hero-input {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 8px 14px 20px;
+  background: var(--panel);
+  border: 1px solid var(--hairline-2);
+  border-radius: 999px;
+  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+.url-hero-input:focus-within {
+  border-color: rgba(var(--accent-bright-rgb), 0.45);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+.url-hero-input input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--fg);
+  font-size: 16px;
+  letter-spacing: -0.005em;
+}
+.url-hero-input input::placeholder { color: var(--fg-4); }
+.url-hero-input .url-go {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--accent);
+  color: #0a1311;
+  font-weight: 500;
+  font-size: 13px;
+  transition: background 150ms var(--ease), opacity 150ms var(--ease);
+}
+.url-hero-input .url-go:hover:not(:disabled) { background: var(--accent-bright); }
+.url-hero-input .url-go:disabled { opacity: 0.4; cursor: default; }
+
+.url-wl-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+.url-wl-link {
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+  color: var(--accent-bright);
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 150ms var(--ease);
+}
+.url-wl-link:hover { border-bottom-color: rgba(var(--accent-bright-rgb), 0.45); }
+
+.url-suggestions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  opacity: 0;
+  animation: suggIn 600ms var(--ease) 1s forwards;
+}
+@keyframes suggIn { to { opacity: 1; } }
+.url-suggestion {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  color: var(--fg-4);
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px dashed var(--hairline-2);
+}
+
+/* ============================================================
+   INTERSTITIALS — shared full-screen shell
+   ============================================================ */
+.intermission-screen {
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.intermission {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 12px;
+}
+.intermission .int-text {
+  font-family: "Geist", sans-serif;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+  margin: 0;
+  text-wrap: balance;
+  max-width: 520px;
+}
+.intermission .int-accent {
+  font-family: "Geist", sans-serif;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--accent-bright);
+  margin: 14px 0 0;
+  text-wrap: balance;
+  max-width: 520px;
+}
+.intermission .int-small {
+  font-size: 14px;
+  color: var(--fg-3);
+  margin: 18px 0 0;
+  line-height: 1.5;
+  max-width: 440px;
+}
+/* generic fade-in for staged lines */
+.int-fade {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: intFade 700ms var(--ease) forwards;
+}
+@keyframes intFade {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.int-skip {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 38px;
+  text-align: center;
+  font-family: "Geist Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  color: var(--fg-4);
+  opacity: 0;
+  animation: intFade 600ms var(--ease) forwards;
+  pointer-events: none;
+}
+
+/* --- graphic wrapper: graphic sits 48px above text --- */
+.int-graphic {
+  margin-bottom: 48px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================================
+   INTERSTITIAL A — THE FADE (10 blocks)
+   ============================================================ */
+.fade-blocks {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  max-width: 400px;
+}
+.fade-blocks .fb {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: var(--fg);
+}
+.fade-blocks .fb.fade {
+  animation: fbFade 900ms var(--ease) forwards;
+}
+@keyframes fbFade {
+  0%   { background: var(--fg); opacity: 1; }
+  45%  { background: var(--fg-5); opacity: 1; }
+  100% { background: var(--fg-5); opacity: 0; }
+}
+.fade-blocks .fb.survive {
+  animation: fbPulse 900ms var(--ease) 2.1s 1;
+}
+@keyframes fbPulse {
+  0%, 100% { background: var(--fg); transform: scale(1); }
+  40%      { background: var(--accent-bright); transform: scale(1.14); box-shadow: 0 0 14px 1px rgba(var(--accent-bright-rgb), 0.5); }
+}
+
+/* ============================================================
+   INTERSTITIAL B — THE ACTION GAP (figures)
+   ============================================================ */
+.gap-figs {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 64px;
+  margin-bottom: 36px;
+}
+.gap-fig {
+  position: relative;
+  color: var(--fg-4);
+  opacity: 0;
+  transition: opacity 600ms var(--ease);
+  flex-shrink: 0;
+}
+.gap-fig.in { opacity: 1; }
+.gap-fig.out { opacity: 0; }
+.gap-fig.you { color: var(--accent-bright); }
+.gap-fig svg { display: block; }
+.gap-fig .fig-tag {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Geist Mono", monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: var(--accent-bright);
+  white-space: nowrap;
+}
+.gap-fig .fig-arrow {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--accent-bright);
+}
+.gap-fig .fig-check {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 2px);
+  transform: translateY(-50%);
+  color: var(--accent-bright);
+}
+
+/* ============================================================
+   INTERSTITIAL C & D — SVG charts (draw-on)
+   ============================================================ */
+.int-chart { width: 100%; max-width: 400px; height: auto; overflow: visible; }
+.draw-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drawOn 3s var(--ease) forwards;
+}
+@keyframes drawOn { to { stroke-dashoffset: 0; } }
+.chart-mark {
+  font-family: "Geist Mono", monospace;
+  font-size: 10.5px;
+  fill: var(--fg-4);
+  letter-spacing: 0.04em;
+}
+.chart-label {
+  font-family: "Geist Mono", monospace;
+  fill: var(--accent-bright);
+}
+.chart-area { fill: var(--accent-soft); opacity: 0; animation: intFade 900ms var(--ease) 3.6s forwards; }
+.chart-anno { opacity: 0; animation: intFade 700ms var(--ease) 2.4s forwards; }
+.chart-anno-late { opacity: 0; animation: intFade 700ms var(--ease) 4.6s forwards; }
+
+/* dotted with-action curve — wipe in left→right after the main curve */
+.acc-wipe {
+  transform: scaleX(0);
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: accWipe 1.6s var(--ease) 3s forwards;
+}
+@keyframes accWipe { to { transform: scaleX(1); } }
+
+/* ============================================================
+   INTERSTITIALS v2 — shared highlight + line scale helpers
+   ============================================================ */
+.i-acc { color: var(--accent-bright); }
+.i-dgr { color: var(--danger); }
+
+.intermission .int-22 {
+  font-family: "Geist", sans-serif;
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+  color: var(--fg);
+  margin: 0;
+  text-wrap: balance;
+  max-width: 520px;
+}
+.intermission .int-16 {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  margin: 0;
+  text-wrap: pretty;
+  max-width: 480px;
+}
+.intermission .int-mantra {
+  font-family: "Geist", sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--accent-bright);
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* ============================================================
+   STEP 0 — welcome heading above theme cards
+   ============================================================ */
+.theme-welcome {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.theme-welcome-h {
+  font-family: "Geist", sans-serif;
+  font-weight: 500;
+  font-size: 38px;
+  line-height: 1.1;
+  letter-spacing: -0.018em;
+  color: var(--fg);
+  margin: 0 0 12px;
+}
+.theme-welcome-sub {
+  font-size: 14px;
+  color: var(--fg-3);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   A — THE CONSUMPTION TRUTH (counter)
+   ============================================================ */
+.ct-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+}
+.ct-num {
+  display: inline-flex;
+  font-family: "Geist Mono", monospace;
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent-bright);
+  letter-spacing: 0.01em;
+}
+.ct-num.pulse { animation: ctPulse 300ms var(--ease); }
+@keyframes ctPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+.ct-num .ct-digit {
+  transition: opacity 400ms var(--ease), transform 400ms var(--ease);
+}
+.ct-num.dissolving .ct-digit {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.ct-num-small { font-size: 40px; }
+.ct-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 13px;
+  color: var(--fg-3);
+  margin: 12px 0 0;
+}
+.ct-label-sm {
+  font-size: 12px;
+  color: var(--fg-4);
+}
+.intermission .ct-spaced { margin-top: 30px; }
+
+/* ============================================================
+   B — THE ACTION GAP (20 silhouettes, 2 rows)
+   ============================================================ */
+.intermission .ag-l2 { margin-top: 16px; }
+.b-crowd {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  margin: 40px 0;
+  min-height: 56px;
+}
+.b-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.b-fig {
+  position: relative;
+  color: var(--fg-4);
+  opacity: 0;
+  transition: opacity 500ms var(--ease);
+  flex-shrink: 0;
+}
+.b-fig.in { opacity: 1; }
+.b-fig.you { color: var(--accent-bright); }
+.b-fig.you.glow.in svg { filter: drop-shadow(0 0 6px rgba(var(--accent-bright-rgb), 0.6)); }
+.b-fig svg { display: block; }
+.b-fig .b-tag {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--accent-bright);
+  white-space: nowrap;
+}
+.b-fig .b-arrow { display: block; }
+.b-fig .b-check {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 3px);
+  transform: translateY(-50%);
+  color: var(--accent-bright);
+}
+.b-return { opacity: 0; }
+.b-return.in { opacity: 1; }
+.intermission .ag-q { margin-top: 8px; }
+.intermission .ag-final { margin-top: 28px; }
+
+/* ============================================================
+   C — adjustments
+   ============================================================ */
+.intermission .fc-main { margin-top: 16px; }
+.intermission .fc-sub { margin-top: 24px; }
+
+/* ============================================================
+   D — THE SMALL WIN (split graphic)
+   ============================================================ */
+.intermission .sw-l2 { margin-top: 16px; }
+.sw-graphic { margin-top: 36px; margin-bottom: 36px; }
+.split-chart { max-width: 400px; }
+.intermission .sw-para { margin-top: 8px; }
+.intermission .int-mantra.int-fade { margin-top: 26px; }
+
+/* ============================================================
+   E — THE FUTURE YOU (before / after cards)
+   ============================================================ */
+.e-cards {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: stretch;
+  margin: 40px 0 28px;
+}
+.e-card {
+  position: relative;
+  flex: 1;
+  max-width: 220px;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: left;
+  transition: opacity 800ms var(--ease), box-shadow 800ms var(--ease), border-color 800ms var(--ease);
+}
+.e-card.dim { opacity: 0.3; }
+.e-card.glow {
+  box-shadow: 0 0 20px rgba(var(--accent-bright-rgb), 0.15);
+  border-color: rgba(var(--accent-bright-rgb), 0.35);
+}
+.e-head {
+  font-family: "Geist Mono", monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 14px;
+}
+.e-head.today { color: var(--fg-4); }
+.e-head.day30 { color: var(--accent-bright); }
+.e-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.e-line {
+  font-size: 14px;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+.e-line.t { color: var(--fg-4); }
+.e-line.d { color: var(--fg-2); }
+.e-here {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  white-space: nowrap;
+  animation: intFade 600ms var(--ease) forwards;
+}
+.intermission .fy-final { margin-top: 10px; }
+
+/* ============================================================
+   STEP 5 — looping typing line
+   ============================================================ */
+.url-typing {
+  margin-top: 20px;
+  text-align: center;
+  font-family: "Geist Mono", monospace;
+  font-size: 13px;
+  color: var(--fg-4);
+  letter-spacing: 0.01em;
+  min-height: 1.5em;
+}
+.url-caret {
+  display: inline-block;
+  margin-left: 1px;
+  color: var(--fg-3);
+  animation: caretBlink 1.06s step-end infinite;
+}
+@keyframes caretBlink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* ============================================================
+   PROCESSING — determinate progress bars (replaces shimmer)
+   ============================================================ */
+.proc-stage .stage-end {
+  flex-shrink: 0;
+  width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.stage-bar {
+  width: 64px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  overflow: hidden;
+  position: relative;
+}
+.stage-bar-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent-bright);
+}
+.proc-stage.is-active .stage-bar-fill {
+  animation: stageFill 2s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+@keyframes stageFill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.stage-check { color: var(--accent-bright); }
+
+/* ============================================================
+   ============================================================
+   INTERSTITIALS v3 — A · B · C · D · E
+   Quiet, line-by-line arrival. New class namespaces (ia/ib/ic/id/ie)
+   supersede all earlier interstitial styles above.
+   ============================================================
+   ============================================================ */
+
+/* shared arrival animation: opacity 0→1 + translateY 10→0, gentle ~0.9s */
+.iv-fade {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: ivFade 0.9s var(--ease) forwards;
+}
+@keyframes ivFade {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* highlight helpers */
+.i-fg1 { color: var(--fg); }
+
+/* ------------------------------------------------------------
+   A — CONSUMPTION TRUTH (pure type)
+   ------------------------------------------------------------ */
+.ia-eyebrow {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fg-3);
+  margin: 0;
+}
+.ia-stat {
+  font-size: 48px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  color: var(--fg);
+  margin: 18px 0 0;
+}
+.ia-sub {
+  font-size: 16px;
+  color: var(--fg-3);
+  margin: 8px 0 0;
+}
+.ia-mid {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  max-width: 420px;
+  margin: 40px 0 0;
+  text-wrap: balance;
+}
+.ia-sub-gap { margin-bottom: 28px; }
+.ia-para-2 { margin-top: 12px; }
+.ia-para {
+  font-size: 14px;
+  color: var(--fg-3);
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------
+   B — ACTION GAP (100-person grid)
+   ------------------------------------------------------------ */
+.ib-head {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  max-width: 460px;
+  margin: 0;
+  text-align: center;
+  text-wrap: balance;
+}
+.ib-body {
+  font-size: 13px;
+  color: var(--fg-3);
+  line-height: 1.85;
+  max-width: 400px;
+  margin: 26px 0 0;
+  text-align: center;
+  text-wrap: pretty;
+}
+/* grid + overlay share a positioning context so the text can fill
+   the void the faded people leave behind */
+.ib-gridwrap {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 34px 0 0;
+}
+.ib-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  width: 100%;
+  justify-items: center;
+}
+/* stat + punchline absolutely positioned over rows 4–7, centred */
+.ib-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  pointer-events: none;
+}
+.ib-person {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+.ib-head-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fg-4);
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.ib-body-bar {
+  width: 10px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--fg-5);
+  transition: background 0.4s var(--ease);
+}
+.ib-person.faded {
+  opacity: 0.06;
+  transform: scale(0.7);
+}
+.ib-person.you .ib-head-dot {
+  background: var(--accent-bright);
+  box-shadow: 0 0 10px var(--accent);
+}
+.ib-person.you .ib-body-bar { background: var(--accent); }
+.ib-you-label {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--accent-bright);
+  animation: ivFade 0.4s var(--ease) forwards;
+}
+.ib-stat {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-3);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  max-width: 340px;
+  margin: 0;
+  text-align: center;
+  text-wrap: pretty;
+}
+.ib-punch {
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--fg);
+  line-height: 1.45;
+  max-width: 360px;
+  margin: 0;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------------
+   C — FORGETTING CURVE (labeled chart)
+   ------------------------------------------------------------ */
+.ic-graphic {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 24px 0 0;
+}
+.ic-chart {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  overflow: visible;
+}
+.ic-axis { stroke: var(--hairline-2); stroke-width: 1; }
+.ic-tick {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  fill: var(--fg-3);
+  letter-spacing: 0.02em;
+}
+.ic-gap { fill: rgba(255, 90, 95, 0.07); }
+
+/* y-axis title, rotated */
+.ic-axis-title {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  fill: var(--fg-3);
+  letter-spacing: 0.06em;
+}
+
+/* draw-on reveal: clip rect grows left→right.
+   passive draws first (1.2s), action follows after it lands (+0.4s) */
+.ic-reveal {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+.ic-reveal-p { animation: icReveal 1.2s var(--ease) 0s forwards; }
+.ic-reveal-a { animation: icReveal 1.2s var(--ease) 1.6s forwards; }
+@keyframes icReveal { to { transform: scaleX(1); } }
+
+/* gap tint, drop marker + end labels quietly arrive once both curves drawn */
+.ic-late {
+  opacity: 0;
+  animation: icLate 0.9s var(--ease) 2.8s forwards;
+}
+@keyframes icLate { to { opacity: 1; } }
+.ic-gap.ic-late { animation-name: icGapLate; }
+@keyframes icGapLate { to { opacity: 1; } }
+.ic-drop-label.ic-late { animation-name: icDropLate; }
+@keyframes icDropLate { to { opacity: 0.85; } }
+.ic-end-passive.ic-late { animation-name: icPassiveLate; }
+@keyframes icPassiveLate { to { opacity: 0.9; } }
+.ic-passive {
+  stroke: var(--danger);
+  stroke-opacity: 0.6;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 5 4;
+  fill: none;
+}
+.ic-action {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+}
+.ic-drop {
+  stroke: var(--danger);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.ic-drop-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  fill: var(--danger);
+  fill-opacity: 0.9;
+}
+.ic-end { font-family: "Geist Mono", monospace; font-size: 11px; }
+.ic-end-passive { fill: var(--danger); fill-opacity: 0.9; }
+.ic-end-action { fill: var(--accent-bright); }
+.ic-head {
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  max-width: 420px;
+  margin: 28px 0 0;
+  text-wrap: balance;
+}
+.ic-body {
+  font-size: 13px;
+  color: var(--fg-3);
+  line-height: 1.7;
+  max-width: 400px;
+  margin: 18px 0 0;
+  text-wrap: pretty;
+}
+.ic-body-2 { margin-top: 14px; text-wrap: balance; }
+
+/* ------------------------------------------------------------
+   COLD OPEN (first screen, before theme) — restrained, filmic
+   ------------------------------------------------------------ */
+.io-eyebrow {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--fg-3);
+  margin: 0;
+  white-space: nowrap;
+}
+.io-phrase {
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+  max-width: 600px;
+  margin: 30px 0 0;
+  text-wrap: balance;
+}
+.io-attrib {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-3);
+  letter-spacing: 0.02em;
+  margin: 18px 0 0;
+  white-space: nowrap;
+}
+.io-idea {
+  font-size: 15px;
+  color: var(--fg-3);
+  line-height: 1.7;
+  max-width: 500px;
+  margin: 40px 0 0;
+  text-wrap: pretty;
+}
+.io-idea-2 { margin-top: 16px; }
+.io-final {
+  font-size: 15px;
+  color: var(--fg);
+  line-height: 1.6;
+  max-width: 500px;
+  margin: 26px 0 0;
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------
+   HABIT MOMENTUM (after C, before url) — warmer setup screen
+   ------------------------------------------------------------ */
+.ih-head {
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  max-width: 460px;
+  margin: 18px 0 0;
+  text-wrap: balance;
+}
+.ih-body {
+  font-size: 14px;
+  color: var(--fg-3);
+  line-height: 1.65;
+  max-width: 400px;
+  margin: 22px 0 0;
+  text-wrap: pretty;
+}
+.ih-body-2 { margin-top: 12px; }
+.ih-days {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 34px 0 0;
+}
+.ih-dots {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.ih-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--fg-4);
+  box-sizing: border-box;
+}
+.ih-dot.on {
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+  animation: ihPulse 1.8s var(--ease) infinite;
+}
+@keyframes ihPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-bright-rgb), 0.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(var(--accent-bright-rgb), 0); }
+}
+.ih-days-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--fg-4);
+}
+
+/* ------------------------------------------------------------
+   D — SMALL WIN (target / bullseye)
+   ------------------------------------------------------------ */
+.id-head {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  margin: 0;
+  text-wrap: balance;
+}
+.id-sub {
+  font-size: 13px;
+  color: var(--fg-3);
+  margin: 14px 0 0;
+}
+.id-target {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  margin: 36px 0;
+}
+/* a glowing accent centre dot with concentric rings rippling outward from it */
+.id-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--accent-bright-rgb), 0.30);
+  transform: translate(-50%, -50%) scale(0.18);
+  opacity: 0;
+  animation: idRipple 0.7s var(--ease) forwards;
+}
+.id-ring-3 { width: 60px;  height: 60px;  border-color: rgba(var(--accent-bright-rgb), 0.45); animation-delay: 0.45s; }
+.id-ring-2 { width: 110px; height: 110px; border-color: rgba(var(--accent-bright-rgb), 0.28); animation-delay: 0.7s; }
+.id-ring-1 { width: 160px; height: 160px; border-color: rgba(var(--accent-bright-rgb), 0.16); animation-delay: 0.95s; }
+@keyframes idRipple {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+  55%  { opacity: 1; }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+/* glowing accent centre dot — lands first, then the rings pulse out around it */
+.id-bull {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--accent-bright);
+  box-shadow: 0 0 16px var(--accent-bright), 0 0 34px rgba(var(--accent-bright-rgb), 0.5);
+  opacity: 0;
+  transform: scale(0);
+  animation: idBull 0.5s var(--ease) 0.15s forwards;
+}
+@keyframes idBull {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .id-ring { animation: none; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .id-bull { animation: none; opacity: 1; transform: scale(1); }
+}
+.id-close {
+  font-size: 19px;
+  font-weight: 300;
+  color: var(--fg);
+  line-height: 1.5;
+  max-width: 420px;
+  margin: 40px 0 0;
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------------
+   E — FUTURE YOU (today vs day 30)
+   ------------------------------------------------------------ */
+.ie-head {
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--fg);
+  margin: 0;
+}
+.ie-cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 36px 0 0;
+}
+.ie-arrow {
+  font-size: 20px;
+  color: var(--fg-4);
+  flex-shrink: 0;
+}
+.ie-card {
+  position: relative;
+  width: 190px;
+  border-radius: 10px;
+  border: 1px solid var(--hairline-2);
+  background: var(--panel);
+  padding: 20px 16px;
+  text-align: left;
+  transition: opacity 0.8s var(--ease);
+}
+.ie-card.glow {
+  border-color: rgba(var(--accent-bright-rgb), 0.35);
+  box-shadow: 0 0 28px rgba(var(--accent-bright-rgb), 0.12);
+}
+.ie-card.dim { opacity: 0.3; }
+.ie-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 12px;
+}
+.ie-label.today { color: var(--fg-3); }
+.ie-label.day30 { color: var(--accent-bright); }
+.ie-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ie-line {
+  font-size: 12px;
+  color: var(--fg-3);
+  line-height: 1.35;
+}
+.ie-made {
+  font-weight: 500;
+  color: var(--accent-bright);
+}
+.ie-here {
+  position: absolute;
+  left: 16px;
+  top: calc(100% + 8px);
+  font-family: "Geist Mono", monospace;
+  font-size: 9px;
+  color: var(--fg-3);
+  opacity: 0.4;
+  white-space: nowrap;
+}
+.ie-close {
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--accent-bright);
+  max-width: 460px;
+  margin: 40px 0 0;
+  text-wrap: balance;
+}
+.ie-sub {
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+  color: var(--fg-3);
+  letter-spacing: 0.04em;
+  margin: 14px 0 0;
+}
+
+/* ============================================================
+   WELCOME + SIGN-UP (onboarding entry, before the theme step)
+   ============================================================ */
+.ob-entry {
+  align-items: center; /* vertically centre the entry screens */
+}
+/* the welcome group sits slightly ABOVE dead centre — reads as focused,
+   not as text floating in a void. margin counts in flex cross-axis centring. */
+.ob-entry .ob-welcome,
+.ob-entry .ob-signup { margin-bottom: 9vh; }
+
+@keyframes ivFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.iv-fade-up { animation: ivFadeUp 0.6s var(--ease) both; }
+
+/* ---- welcome two-beat reveal ---- */
+.ob-rise { animation: ivFadeUp 0.62s var(--ease) both; }
+.ob-rise-mark { animation-delay: 0.05s; }
+.ob-rise-l1   { animation-delay: 0.30s; }
+.ob-rise-l2   { animation-delay: 0.80s; } /* ~0.5s after "Stop saving." */
+.ob-rise-sub  { animation-delay: 1.32s; } /* body lands after both lines */
+.ob-rise-act  { animation-delay: 1.60s; }
+@media (prefers-reduced-motion: reduce) {
+  .ob-rise { animation: none; opacity: 1; transform: none; }
+}
+
+.ob-entry-mark {
+  font-family: "Geist", sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  margin-bottom: 22px;
+}
+.ob-entry-mark span { color: var(--accent-bright); }
+
+/* ---- welcome ---- */
+.ob-welcome {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+.ob-welcome-h {
+  margin: 0;
+  font-size: 46px;
+  font-weight: 300;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: var(--fg);
+}
+.ob-welcome-line { display: block; }
+.ob-welcome-sub {
+  margin: 18px auto 0;
+  max-width: 400px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--fg-3);
+  text-wrap: pretty;
+}
+.ob-welcome-actions {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.ob-cta {
+  padding: 12px 22px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.ob-textlink {
+  background: none;
+  border: none;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--fg-3);
+  transition: color 150ms var(--ease);
+}
+.ob-textlink:hover { color: var(--fg); }
+
+[data-fontset="editorial"] .ob-welcome-h { font-family: "Instrument Serif", "Geist", serif; font-weight: 400; }
+[data-fontset="soft"] .ob-welcome-h { font-family: "DM Serif Display", "Geist", serif; font-weight: 400; }
+
+/* ---- sign-up ---- */
+.ob-signup {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.ob-signup .ob-entry-mark { text-align: center; margin-bottom: 18px; }
+.ob-signup-h {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.ob-signup-sub {
+  margin: 8px 0 22px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--fg-3);
+}
+
+.ob-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--hairline-2);
+  background: #ffffff;
+  color: #1f1f1f;
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 150ms var(--ease), box-shadow 150ms var(--ease);
+}
+.ob-google-btn:hover { background: #f3f3f3; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+
+.ob-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--fg-5);
+}
+.ob-divider::before, .ob-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+.ob-divider span {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--fg-4);
+}
+
+.ob-field { display: block; text-align: left; margin-bottom: 11px; }
+.ob-field-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-4);
+  margin-bottom: 7px;
+}
+.ob-input {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--hairline-2);
+  background: var(--panel-2);
+  color: var(--fg);
+  font-size: 14px;
+  transition: border-color 300ms var(--ease), box-shadow 300ms var(--ease);
+}
+.ob-input::placeholder { color: var(--fg-3); }
+/* typing state — the field acknowledges input by warming its border to accent */
+.ob-input.has-text {
+  border-color: rgba(var(--accent-bright-rgb), 0.45);
+}
+.ob-input:focus {
+  outline: none;
+  border-color: rgba(var(--accent-bright-rgb), 0.45);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+.ob-email-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 11px 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   GATED "CONTINUE" BUTTONS
+   Any step that requires input before the user can advance uses
+   .btn-gate. It stays dormant (a calm surface that doesn't pretend
+   to be clickable) while disabled, then "wakes up" to accent the
+   moment its requirement is met. Driven entirely by :disabled so
+   every gated step — theme, name, problems, goals, briefing, the
+   email field — behaves identically.
+   ============================================================ */
+.btn-gate {
+  /* dormant */
+  background: var(--panel-3);
+  border-color: var(--hairline-2);
+  color: var(--fg-4);
+  font-weight: 500;
+  transition: background 320ms var(--ease), border-color 320ms var(--ease),
+              color 320ms var(--ease);
+}
+.btn-gate:disabled { cursor: not-allowed; }
+/* requirement met — accent fades in, text brightens, it looks clickable */
+.btn-gate:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a1311;
+}
+.btn-gate:not(:disabled):hover {
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+
+.ob-legal {
+  margin: 16px 0 0;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--fg-4);
+}
+.ob-legal a { color: var(--fg-3); text-decoration: underline; text-underline-offset: 2px; }
+.ob-legal a:hover { color: var(--fg-2); }
+
+/* ---- Google account chooser (prototype) ---- */
+.ob-gscrim {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  animation: scrimIn 200ms var(--ease);
+}
+.ob-gsheet {
+  width: min(400px, 96vw);
+  background: #1c1b1f;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  animation: modalIn 220ms var(--ease);
+  color: #e3e3e3;
+}
+.ob-gsheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ob-gsheet-brand {
+  font-family: "Geist", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #c7c7c7;
+}
+.ob-gsheet-body { padding: 22px 20px 16px; }
+.ob-gsheet-h {
+  margin: 0;
+  font-family: "Geist", sans-serif;
+  font-size: 21px;
+  font-weight: 400;
+  color: #e8e8e8;
+}
+.ob-gsheet-to { margin: 6px 0 20px; font-size: 13px; color: #a5a5a5; }
+.ob-gsheet-to strong { color: #e8e8e8; font-weight: 500; }
+
+.ob-gaccount {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  transition: background 130ms var(--ease);
+}
+.ob-gaccount:hover { background: rgba(255, 255, 255, 0.06); }
+.ob-gavatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: #5b8def;
+  color: #fff;
+  font-family: "Geist", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.ob-gacct-info { display: flex; flex-direction: column; min-width: 0; }
+.ob-gacct-name { font-family: "Geist", sans-serif; font-size: 14px; color: #e8e8e8; }
+.ob-gacct-email { font-size: 12.5px; color: #a5a5a5; }
+.ob-gicon-other {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  color: #a5a5a5;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+.ob-gsheet-foot {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: #7a7a7a;
+  text-align: center;
+}
+
+/* signing-in state */
+.ob-gsigning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 44px 20px 40px;
+}
+.ob-gspinner {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.14);
+  border-top-color: #5b8def;
+  animation: obSpin 0.8s linear infinite;
+}
+@keyframes obSpin { to { transform: rotate(360deg); } }
+.ob-gsigning-text { margin: 0; font-family: "Geist", sans-serif; font-size: 14px; color: #c7c7c7; }

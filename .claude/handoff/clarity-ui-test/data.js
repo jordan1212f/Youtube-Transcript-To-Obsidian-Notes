@@ -274,6 +274,103 @@ function generateYearHeatmap() {
   return { cells, start: new Date(start), end: new Date(end), today: new Date(today) };
 }
 
+// ----- Goal journals (Bear-style, free-form, user-written only) -----
+// Each entry: { id, daysAgo, text } — newest sorts to the bottom (running-document feel)
+const _DAY = 86400000;
+const GOAL_JOURNALS = {
+  // Run a sub-25 5K — the populated showcase
+  g3: [
+    { id: 'j1', daysAgo: 16,
+      text: "Signed up for the October 5K today. Twenty-five minutes feels a long way off right now, my first attempt was 31 and I had to walk twice. But there's a date on the calendar now, and that makes it real in a way that wanting to get fit never did." },
+    { id: 'j2', daysAgo: 9,
+      text: "Tried __16:8 fasting__ this week alongside the running. Skipping breakfast was rough for the first two days, then it just became normal.\n\nWhat I changed, in order:\n1. Pushed breakfast back to noon\n2. Black coffee only in the morning\n3. ~~Afternoon snacking~~ cut entirely\n\nRan fasted on Thursday and felt *lighter*, not weaker like I expected. Keeping it for now." },
+    { id: 'j3', daysAgo: 5,
+      text: "Gym session before the easy run. Did legs, which in hindsight was a mistake, the run afterward was a slog and my pace was all over the place. Lesson learned: lifting and running on the same day needs more thought, or more food." },
+    { id: 'j4', daysAgo: 2,
+      text: "## A week that finally clicked\n\nFirst week where running felt *easy* instead of like punishment. I kept the pace **deliberately slow**, slower than felt natural, and still finished all three runs without walking.\n\n==Did a timed K at the end and hit 4:35== — that would put me right around 23 minutes for the full 5K if I can hold it.\n\nThis week:\n- [x] Three easy runs, zone 2 only\n- [x] One timed K to check pace\n- [ ] Add a short mobility session\n- [ ] Book a sports massage\n\nRace-day plan from [the sub-25 guide](https://example.com): start slow, negative-split the back half." },
+  ],
+  // Save $20k by Dec — second curated example
+  g1: [
+    { id: 'j1', daysAgo: 21,
+      text: "Opened the spreadsheet and actually added up what I spent last month. Not going to write the number here. The subscriptions were the part that stung, paying for things I haven't opened since January." },
+    { id: 'j2', daysAgo: 8,
+      text: "Automated the transfer so I stop relying on willpower at the end of the month. Future me can argue with the standing order instead of with myself. £200 the day after payday, gone before I can spend it." },
+    { id: 'j3', daysAgo: 1,
+      text: "Three weeks in and the automated saving is genuinely invisible now. Didn't miss it once. The boring systems really do beat the motivated bursts." },
+  ],
+};
+
+function journalDateLabel(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function goalAgoLabel(sec) {
+  if (sec <= 0) return 'just now';
+  if (sec < 3600) return Math.max(1, Math.round(sec / 60)) + 'm ago';
+  if (sec < 86400) return Math.round(sec / 3600) + 'h ago';
+  const d = Math.round(sec / 86400);
+  if (d === 1) return 'yesterday';
+  if (d < 7) return d + 'd ago';
+  if (d < 14) return 'last week';
+  return Math.round(d / 7) + 'w ago';
+}
+
+// Build the seed journal for a goal: curated if present, else empty (inviting blank page).
+function buildGoalJournal(goal) {
+  const seed = GOAL_JOURNALS[goal.id];
+  if (!seed) return [];
+  return seed
+    .map(e => ({ id: e.id, ts: Date.now() - e.daysAgo * _DAY, text: e.text }))
+    .sort((a, b) => a.ts - b.ts); // oldest first, newest at bottom
+}
+
+// ----- Archive: completed actions grouped by goal (a wall of accomplishments) -----
+// Each: { id, action, source, daysAgo }. Reverse-chron when shown (newest first).
+const GOAL_ARCHIVE = {
+  g1: [ // Save $20k by Dec — finance
+    { id: 'a1', action: 'Set up the automated $200/mo brokerage transfer', source: 'The 7 income streams that compound in your 20s', daysAgo: 2 },
+    { id: 'a2', action: 'Cancelled the two subscriptions I never opened', source: 'Codie Sanchez — small leaks sink budgets', daysAgo: 6 },
+    { id: 'a3', action: 'Opened a high-yield savings account for the buffer', source: 'The 5 types of wealth', daysAgo: 11 },
+    { id: 'a4', action: 'Wrote a one-page money plan for the quarter', source: 'Slow productivity', daysAgo: 18 },
+    { id: 'a5', action: 'Moved the £500 work bonus straight to savings', source: 'Naval — play long-term games', daysAgo: 25 },
+  ],
+  g2: [ // Read 24 books — productivity
+    { id: 'a1', action: "Finished 'Deep Work' and noted three takeaways", source: 'Cal Newport — the case for slow productivity', daysAgo: 1 },
+    { id: 'a2', action: 'Set a 20-page nightly reading block before bed', source: 'Atomic Habits — make it obvious', daysAgo: 5 },
+    { id: 'a3', action: 'Built a shortlist of the next six titles', source: 'Steph Smith — how to read with intent', daysAgo: 10 },
+    { id: 'a4', action: 'Swapped evening scrolling for the Kindle', source: 'Mel Robbins — the 5-second rule', daysAgo: 17 },
+  ],
+  g3: [ // Run a sub-25 5K — fitness
+    { id: 'a1', action: 'Ran 5K three times this week (Mon / Wed / Fri)', source: 'Why your strength stalled at month 4', daysAgo: 1 },
+    { id: 'a2', action: 'Mapped a flat 5K route and saved it to my watch', source: 'Zone 2 base building for beginners', daysAgo: 7 },
+    { id: 'a3', action: 'Bought proper running shoes, finally', source: 'Jeff Nippard — the fundamentals', daysAgo: 13 },
+    { id: 'a4', action: 'Did one easy zone-2 base run, no pace pressure', source: 'Zone 2 base building for beginners', daysAgo: 19 },
+  ],
+  g4: [ // Launch side project — career
+    { id: 'a1', action: "Published my first 'building in public' post", source: 'Steph Smith — writing online', daysAgo: 3 },
+    { id: 'a2', action: 'Registered the domain and pointed the DNS', source: 'Ali Abdaal — finishing what you start', daysAgo: 9 },
+    { id: 'a3', action: 'Wrote the landing-page headline and subhead', source: 'Steph Smith — writing online', daysAgo: 15 },
+  ],
+  g5: [ // Daily journaling — mindset
+    { id: 'a1', action: 'Wrote for ten minutes before bed, five nights running', source: 'Atomic Habits — never miss twice', daysAgo: 2 },
+    { id: 'a2', action: 'Set a nightly journal reminder for 9:30pm', source: 'Mel Robbins — the 5-second rule', daysAgo: 9 },
+  ],
+};
+
+function archiveDateLabel(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Completed items for a goal, newest first, with absolute timestamps.
+function buildGoalArchive(goalId) {
+  const seed = GOAL_ARCHIVE[goalId] || [];
+  return seed
+    .map(e => ({ ...e, ts: Date.now() - e.daysAgo * _DAY }))
+    .sort((a, b) => b.ts - a.ts);
+}
+
 Object.assign(window, {
   CATEGORIES, MOTTOS, LIBRARY, DETAIL_C1, TASKS, GOALS, CATEGORY_BREAKDOWN, generateYearHeatmap,
+  GOAL_JOURNALS, buildGoalJournal, journalDateLabel, goalAgoLabel,
+  GOAL_ARCHIVE, buildGoalArchive, archiveDateLabel,
 });

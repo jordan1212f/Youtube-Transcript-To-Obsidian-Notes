@@ -1,6 +1,6 @@
 /* Sidebar — nav, goals, profile */
 
-function Sidebar({ route, setRoute, openSettings, goToGoal, activeGoal }) {
+function Sidebar({ route, setRoute, openSettings, goToGoal, openGoal, activeGoal, activeGoalId }) {
   return (
     <aside className="sidebar">
       <div className="sb-brand">
@@ -12,7 +12,8 @@ function Sidebar({ route, setRoute, openSettings, goToGoal, activeGoal }) {
           {[
           { id: 'home', label: 'Focus', ico: Ico.goal, meta: '⌘1' },
           { id: 'ask', label: 'Ask', ico: Ico.ask, meta: '⌘K' },
-          { id: 'library', label: 'Library', ico: Ico.library, meta: '⌘2' }].
+          { id: 'library', label: 'Library', ico: Ico.library, meta: '⌘2' },
+          { id: 'archive', label: 'Archive', ico: Ico.folder, meta: '' }].
           map((item) =>
           <button key={item.id}
           className={`sb-item ${route === item.id ? 'active' : ''}`}
@@ -32,8 +33,8 @@ function Sidebar({ route, setRoute, openSettings, goToGoal, activeGoal }) {
           </div>
           {GOALS.map((g) =>
           <button key={g.id}
-          className={`sb-item ${route === 'library' && activeGoal === g.category ? 'active' : ''}`}
-          onClick={() => goToGoal ? goToGoal(g.category) : setRoute('library')}>
+          className={`sb-item ${activeGoalId === g.id ? 'active' : ''}`}
+          onClick={() => openGoal ? openGoal(g.id) : (goToGoal ? goToGoal(g.category) : setRoute('library'))}>
               <span className="dot" style={{ background: g.color }}></span>
               <span>{g.name}</span>
               <span className="meta">{g.items}</span>

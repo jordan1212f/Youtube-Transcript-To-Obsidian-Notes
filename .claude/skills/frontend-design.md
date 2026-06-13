@@ -270,6 +270,13 @@ Main content area
 
 }
 
+Home screen hierarchy (top to bottom):
+  1. FocusCard (hero, ~40% viewport)
+  2. WeeklyStats bar
+  3. Search bar with ⌘K
+  4. Recent content strip (3-4 compact cards)
+The full content grid lives on the Library page, NOT the home screen.
+
 For article/detail views, content narrows to max-width: 760px. For the Ask screen, content is max-width: 760px with padding: 0 32px.
 
 
@@ -345,6 +352,7 @@ Modals
 
 - Header: flex between, h2 at 22px Geist weight 500, close button (30×30, radius 8px, X icon)
 
+The library card grid lives on the Library page only. The home/focus page shows a compact "recently saved" strip of 3-4 horizontal cards, not the full grid.
 
 6. Focus Card (Hero Component)
 The Focus Card is the most important component. It dominates the home screen.
@@ -405,12 +413,9 @@ Stage labels for YouTube: "Fetching transcript..." → "Reading content..." → 
 8. Onboarding Flow
 Full-screen overlay (z-index 200), centred content max-width 640px.
 Steps:
-Problem picker — "Which of these sounds like you?" with single-column tappable cards. Same styling as goal category cards but padding 14px 16px, font-size 15px, weight 400.
-Goal category picker — 2-column grid of categories with checkmarks. Pick 2-3.
+Goal category picker — "What are you working toward?" 2-column grid of categories with checkmarks. Pick 2-3.
 Goal typing — rows with category label + text input for specific goal.
-Preview — shows a 60%-scaled version of their Focus screen with chosen goal names, inside a bordered frame with a "preview" badge.
-First URL — paste input + processing animation (same as section 7).
-Briefing time — "When should we send your daily briefing?" with 3 pill buttons (Morning 8am / Afternoon 1pm / Evening 7pm), same styling as briefing-pill class.
+First URL — "You're set. Paste your first link." URL input bar.
 Shared onboarding styling:
 Heading: 38px Geist, weight 500, letter-spacing -0.018em
 Subheading: 12.5px, --fg-3, letter-spacing 0.04em
@@ -693,5 +698,4 @@ User avatar in sidebar footer: 32px circle with gradient from accent to darker a
 
 Responsive behaviour: The prototype is desktop-first. No mobile breakpoints in V1. The only media query is @media (max-width: 1100px) which collapses the recents grid from 4 columns to 2 and the detail view from 2 columns to 1.
 
-Tailwind usage: Tailwind is installed but use it sparingly — primarily for utility spacing (mt-4, gap-3, etc.) and flexbox shortcuts. All visual styling (colours, borders, typography, radii) MUST use the CSS custom properties defined above, not Tailwind colour classes. Never use Tailwind's default colour palette.
-
+Tailwind: Do NOT use Tailwind classes for styling. All visual styling uses CSS custom properties defined in globals.css. Tailwind is installed but unused in V1.
