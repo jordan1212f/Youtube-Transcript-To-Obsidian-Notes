@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import Home from './components/Home'
 import Ask from './components/Ask'
 import Library from './components/Library'
+import SettingsModal from './components/SettingsModal'
 
 /* ============================================================
    Accent presets — each maps a name to the CSS custom property
@@ -138,15 +139,15 @@ export default function App() {
         )}
 
         {showSettings && (
-          <div className="scrim" onClick={closeModals}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-head">
-                <h2>Settings</h2>
-                <button className="close" onClick={closeModals} aria-label="Close">✕</button>
-              </div>
-              <p className="home-motto">SettingsModal placeholder — theme, accent and font pickers go here.</p>
-            </div>
-          </div>
+          <SettingsModal
+            onClose={() => setShowSettings(false)}
+            theme={themeApi.theme}
+            setTheme={themeApi.setTheme}
+            accent={themeApi.accent}
+            setAccent={themeApi.setAccent}
+            fontset={themeApi.fontset}
+            setFontset={themeApi.setFontset}
+          />
         )}
       </div>
     </ThemeContext.Provider>
