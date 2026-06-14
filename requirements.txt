@@ -4,3 +4,5 @@ google-api-python-client
 sentence-transformers
 requests
 beautifulsoup4
+pdfplumber
+python-multipart

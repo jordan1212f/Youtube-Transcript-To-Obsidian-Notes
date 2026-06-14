@@ -15,9 +15,10 @@
 from .youtube import extract_youtube
 from .paste import extract_paste
 from .substack import extract_substack
+from .pdf import extract_pdf
 
 # Types we intend to support but haven't built extractors for yet.
-NOT_IMPLEMENTED_TYPES = {'tweet', 'pdf'}
+NOT_IMPLEMENTED_TYPES = {'tweet'}
 
 
 def extract(content_type, url=None, text=None, file=None):
@@ -27,7 +28,7 @@ def extract(content_type, url=None, text=None, file=None):
         content_type: one of youtube | tweet | article | pdf | paste
         url:  source URL (for youtube / tweet / article)
         text: raw text (for paste)
-        file: uploaded file object (for pdf — not implemented yet)
+        file: PDF file path or file-like object (for pdf)
 
     Raises:
         ValueError: unknown content type or missing required input
@@ -48,6 +49,11 @@ def extract(content_type, url=None, text=None, file=None):
             raise ValueError('A url is required to extract an article.')
         return extract_substack(url)
 
+    if content_type == 'pdf':
+        if file is None:
+            raise ValueError('A file is required to extract a PDF.')
+        return extract_pdf(file)
+
     if content_type in NOT_IMPLEMENTED_TYPES:
         raise NotImplementedError(
             f"Extractor for '{content_type}' is not implemented yet."
@@ -61,5 +67,6 @@ __all__ = [
     'extract_youtube',
     'extract_paste',
     'extract_substack',
+    'extract_pdf',
     'NOT_IMPLEMENTED_TYPES',
 ]

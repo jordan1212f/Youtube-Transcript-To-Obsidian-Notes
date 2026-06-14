@@ -4,7 +4,10 @@
 # module so this endpoint stays source-agnostic: extract → summarise → save →
 # embed → return.
 
-from fastapi import APIRouter, HTTPException
+import os
+import tempfile
+
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import Optional
 from urllib.parse import urlparse
@@ -17,6 +20,9 @@ from cost import record_usage
 from database import save_content
 
 router = APIRouter(tags=['process'])
+
+# Reasonable cap for V1 uploads.
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
 
 
 class ProcessRequest(BaseModel):
@@ -96,6 +102,68 @@ def process_content(request: ProcessRequest):
         )
 
     return process_extracted(data, request.goal_id, config)
+
+
+@router.post('/process/upload')
+async def process_upload(
+    file: UploadFile = File(...),
+    goal_id: Optional[int] = Form(None),
+):
+    """Process an uploaded PDF and save the result.
+
+    Multipart form: a `file` (PDF) and an optional `goal_id`. The file is
+    written to a temp file, run through the PDF extractor, then the same
+    extract → summarise → save → embed pipeline as the URL/text endpoint.
+    """
+    # 1. Validate it's a PDF (by extension or content type).
+    filename = file.filename or ''
+    is_pdf = filename.lower().endswith('.pdf') or file.content_type == 'application/pdf'
+    if not is_pdf:
+        raise HTTPException(
+            status_code=400,
+            detail='Only PDF files are supported. Please upload a .pdf file.',
+        )
+
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail='The uploaded file is empty.')
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail='File too large. The maximum upload size is 20MB.',
+        )
+
+    config = load_config()
+
+    # 2. Save to a temp file, keeping the original name so the extractor can
+    #    use it for the title.
+    tmpdir = tempfile.mkdtemp(prefix='clarity_pdf_')
+    tmp_path = os.path.join(tmpdir, os.path.basename(filename) or 'document.pdf')
+    try:
+        with open(tmp_path, 'wb') as out:
+            out.write(contents)
+
+        # 3. Extract.
+        try:
+            data = extract('pdf', file=tmp_path)
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=str(err))
+        except RuntimeError as err:
+            # encrypted, corrupt, or image-only PDF
+            raise HTTPException(status_code=422, detail=str(err))
+
+        # 4. Same pipeline as the URL/text endpoint.
+        return process_extracted(data, goal_id, config)
+    finally:
+        # 5. Clean up the temp file + dir.
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+        try:
+            os.rmdir(tmpdir)
+        except OSError:
+            pass
 
 
 def process_extracted(data, goal_id, config):
