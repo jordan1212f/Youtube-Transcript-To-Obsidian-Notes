@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import Home from './components/Home'
+import Ask from './components/Ask'
 
 /* ============================================================
    Accent presets — each maps a name to the CSS custom property
@@ -117,23 +118,15 @@ export default function App() {
             />
           )}
 
-          {route !== 'home' && (
-            <div className="main-inner">
-              {route === 'ask' && (
-                <section>
-                  <div className="eyebrow">/ ask</div>
-                  <h1 className="home-title welcome">Ask</h1>
-                  <p className="home-motto">Ask placeholder — chat UI goes here.</p>
-                </section>
-              )}
+          {route === 'ask' && <Ask />}
 
-              {route === 'library' && (
-                <section>
-                  <div className="eyebrow">/ library</div>
-                  <h1 className="home-title welcome">Library</h1>
-                  <p className="home-motto">Library placeholder — filterable card grid goes here.</p>
-                </section>
-              )}
+          {route === 'library' && (
+            <div className="main-inner">
+              <section>
+                <div className="eyebrow">/ library</div>
+                <h1 className="home-title welcome">Library</h1>
+                <p className="home-motto">Library placeholder — filterable card grid goes here.</p>
+              </section>
             </div>
           )}
         </main>
