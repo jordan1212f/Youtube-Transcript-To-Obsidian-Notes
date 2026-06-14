@@ -95,10 +95,11 @@ function WeeklyStats() {
 
   if (!stats) return null
 
-  const acted = stats.completed_actions || 0
-  const total = acted + (stats.active_actions || 0)
-  // Backend doesn't track expired actions yet; default to 0 until it does.
-  const expired = stats.expired_actions || 0
+  // Prefer the backend's weekly breakdown; fall back to lifetime counts.
+  const weekly = stats.weekly || {}
+  const acted = weekly.acted ?? stats.completed_actions ?? 0
+  const total = weekly.total ?? acted + (stats.active_actions || 0)
+  const expired = weekly.expired ?? stats.expired_actions ?? 0
   const isLow = total > 0 && acted / total < 0.5
 
   return (

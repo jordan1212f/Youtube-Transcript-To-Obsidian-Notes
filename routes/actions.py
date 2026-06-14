@@ -29,9 +29,9 @@ from pydantic import BaseModel
 from typing import Optional
 from database import (
     create_action, get_actions, update_action_status,
-    delete_action, get_today_focus, get_stats
+    delete_action, skip_action, get_today_focus, get_stats
 )
- 
+
 router = APIRouter(tags=['actions'])
  
  
@@ -90,6 +90,16 @@ def change_action_status(action_id: int, update: ActionStatusUpdate):
         )
     update_action_status(action_id, update.status)
     return {'id': action_id, 'new_status': update.status}
+
+@router.put('/actions/{action_id}/skip')
+def skip_action_route(action_id: int):
+    """Skip an action — marks it 'skipped' so it leaves the Focus view.
+
+    Skipped is terminal (like done) but doesn't count as a completion;
+    it's excluded from the active and expired stats.
+    """
+    skip_action(action_id)
+    return {'id': action_id, 'new_status': 'skipped'}
 
 @router.delete('/actions/{action_id}')
 def remove_action(action_id: int):

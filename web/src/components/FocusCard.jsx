@@ -126,8 +126,7 @@ export default function FocusCard({ openDetail }) {
   function doSkip() {
     if (actionState !== 'idle') return
     setActionState('skipped')
-    // NOTE: the backend doesn't expose /skip yet — call it as documented and
-    // fall back to a local skip if it 404s so the UI still responds.
+    // Persist the skip; keep the optimistic local skip if the request fails.
     fetch(`/api/actions/${focus.id}/skip`, { method: 'PUT' }).catch(() => {})
   }
   function doMoreTime() {

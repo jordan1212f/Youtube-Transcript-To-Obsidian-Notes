@@ -12,7 +12,7 @@
 import sqlite3
 import json
 from pathlib import Path
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 DB_PATH = Path.home() / '.yt-note' / 'obsiditube.db'
 
@@ -349,6 +349,20 @@ def delete_action(action_id):
     conn.commit()
     conn.close()
 
+def skip_action(action_id):
+    """Mark an action as skipped so it drops out of the Focus view.
+
+    'skipped' is a terminal status alongside 'done': skipped actions are
+    excluded from the focus query and from the active/expired counts.
+    """
+    conn = get_db()
+    conn.execute(
+        "UPDATE actions SET status = 'skipped' WHERE id = ?",
+        (action_id,)
+    )
+    conn.commit()
+    conn.close()
+
 def get_today_focus():
     """Get the most urgent incomplete action for the focus view.
  
@@ -364,7 +378,7 @@ def get_today_focus():
         FROM actions a
         JOIN goals g ON g.id = a.goal_id
         JOIN goal_areas ga ON ga.id = g.area_id
-        WHERE a.status != 'done'
+        WHERE a.status NOT IN ('done', 'skipped')
         ORDER BY
             CASE WHEN a.status = 'in_progress' THEN 0 ELSE 1 END,
             CASE WHEN a.deadline IS NOT NULL THEN 0 ELSE 1 END,
@@ -395,12 +409,58 @@ def get_stats():
  
     cursor.execute('SELECT COUNT(*) FROM actions WHERE status = "done"')
     stats['completed_actions'] = cursor.fetchone()[0]
- 
-    cursor.execute('SELECT COUNT(*) FROM actions WHERE status != "done"')
+
+    # Active = still open: excludes both done and skipped.
+    cursor.execute("SELECT COUNT(*) FROM actions WHERE status NOT IN ('done', 'skipped')")
     stats['active_actions'] = cursor.fetchone()[0]
- 
+
     cursor.execute('SELECT COALESCE(SUM(cost), 0) FROM saved_content')
     stats['total_cost'] = round(cursor.fetchone()[0], 4)
+
+    # Timestamps are stored as naive UTC strings ("YYYY-MM-DD HH:MM:SS").
+    now_str = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Expired = open actions whose deadline has already passed.
+    cursor.execute(
+        """SELECT COUNT(*) FROM actions
+           WHERE status NOT IN ('done', 'skipped')
+             AND deadline IS NOT NULL AND deadline != ''
+             AND deadline < ?""",
+        (now_str,)
+    )
+    stats['expired_actions'] = cursor.fetchone()[0]
+
+    # Weekly breakdown — Monday 00:00 UTC through now.
+    today = datetime.utcnow().date()
+    week_start = (today - timedelta(days=today.weekday())).strftime('%Y-%m-%d 00:00:00')
+
+    # Total "in play" this week: created this week or completed this week.
+    cursor.execute(
+        'SELECT COUNT(*) FROM actions WHERE created_at >= ? OR completed_at >= ?',
+        (week_start, week_start)
+    )
+    week_total = cursor.fetchone()[0]
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM actions WHERE status = 'done' AND completed_at >= ?",
+        (week_start,)
+    )
+    week_acted = cursor.fetchone()[0]
+
+    cursor.execute(
+        """SELECT COUNT(*) FROM actions
+           WHERE status NOT IN ('done', 'skipped')
+             AND deadline IS NOT NULL AND deadline != ''
+             AND deadline < ? AND deadline >= ?""",
+        (now_str, week_start)
+    )
+    week_expired = cursor.fetchone()[0]
+
+    stats['weekly'] = {
+        'acted': week_acted,
+        'total': week_total,
+        'expired': week_expired,
+    }
  
     # Streak calculation — consecutive days with at least one action completed
     cursor.execute('''
