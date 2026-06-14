@@ -73,6 +73,9 @@ def process_content(request: ProcessRequest):
             raise HTTPException(status_code=501, detail=str(err))
         except ValueError as err:
             raise HTTPException(status_code=400, detail=str(err))
+        except RuntimeError as err:
+            # extractor couldn't fetch or parse the content
+            raise HTTPException(status_code=502, detail=str(err))
 
     elif request.url:
         content_type = request.content_type or detect_content_type(request.url)
@@ -82,6 +85,9 @@ def process_content(request: ProcessRequest):
             raise HTTPException(status_code=501, detail=str(err))
         except ValueError as err:
             raise HTTPException(status_code=400, detail=str(err))
+        except RuntimeError as err:
+            # extractor couldn't fetch or parse the content
+            raise HTTPException(status_code=502, detail=str(err))
 
     else:
         raise HTTPException(
