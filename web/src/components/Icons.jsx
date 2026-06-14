@@ -18,6 +18,10 @@ export const SearchIcon = (p) => <svg {...icoProps} {...p}><circle cx="11" cy="1
 
 export const ArrowIcon = (p) => <svg {...icoProps} {...p}><path d="M5 12h14m-5-5 5 5-5 5"/></svg>;
 
+export const ArrowLeftIcon = (p) => <svg {...icoProps} {...p}><path d="M19 12H5m5 5-5-5 5-5"/></svg>;
+
+export const LinkIcon = (p) => <svg {...icoProps} {...p}><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>;
+
 export const CheckIcon = (p) => <svg {...icoProps} {...p} strokeWidth="2"><path d="m5 12 5 5 9-11"/></svg>;
 
 export const PlayIcon = (p) => <svg {...icoProps} {...p} fill="currentColor" stroke="none"><path d="M8 5v14l12-7z"/></svg>;

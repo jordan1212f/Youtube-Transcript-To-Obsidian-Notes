@@ -4,6 +4,7 @@ import Home from './components/Home'
 import Ask from './components/Ask'
 import Library from './components/Library'
 import SettingsModal from './components/SettingsModal'
+import Onboarding from './components/Onboarding'
 
 /* ============================================================
    Accent presets — each maps a name to the CSS custom property
@@ -80,6 +81,15 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [motto] = useState(() => MOTTOS[Math.floor(Math.random() * MOTTOS.length)])
+  const [onboarded, setOnboarded] = useState(null) // null = checking
+
+  // Gate the app behind onboarding status.
+  useEffect(() => {
+    fetch('/api/onboarding/status')
+      .then((r) => r.json())
+      .then((d) => setOnboarded(Boolean(d?.onboarded)))
+      .catch(() => setOnboarded(true)) // fail open so the app is usable
+  }, [])
 
   const closeModals = useCallback(() => {
     setShowAdd(false)
@@ -98,6 +108,21 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [closeModals])
+
+  if (onboarded === null) return null // brief check before first paint
+
+  if (!onboarded) {
+    return (
+      <ThemeContext.Provider value={themeApi}>
+        <Onboarding
+          onDone={() => setOnboarded(true)}
+          setTheme={themeApi.setTheme}
+          setAccent={themeApi.setAccent}
+          setFontset={themeApi.setFontset}
+        />
+      </ThemeContext.Provider>
+    )
+  }
 
   return (
     <ThemeContext.Provider value={themeApi}>
