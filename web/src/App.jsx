@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import Sidebar from './components/Sidebar'
 import Home from './components/Home'
 import Ask from './components/Ask'
+import Library from './components/Library'
 
 /* ============================================================
    Accent presets — each maps a name to the CSS custom property
@@ -120,15 +121,7 @@ export default function App() {
 
           {route === 'ask' && <Ask />}
 
-          {route === 'library' && (
-            <div className="main-inner">
-              <section>
-                <div className="eyebrow">/ library</div>
-                <h1 className="home-title welcome">Library</h1>
-                <p className="home-motto">Library placeholder — filterable card grid goes here.</p>
-              </section>
-            </div>
-          )}
+          {route === 'library' && <Library openAdd={() => setShowAdd(true)} />}
         </main>
 
         {/* Modal placeholders — Escape closes whichever is open. */}
