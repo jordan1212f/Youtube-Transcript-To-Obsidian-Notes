@@ -210,7 +210,7 @@ def get_goals(area_id=None):
         ''')
 
     goals = [dict(row) for row in cursor.fetchall()]
-    conn.close
+    conn.close()
     return goals
 
 def archive_goal(goal_id):

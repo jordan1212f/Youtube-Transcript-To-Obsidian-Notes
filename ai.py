@@ -2,92 +2,143 @@ import json
 from anthropic import Anthropic
 
 
-SYSTEM_PROMPT = SYSTEM_PROMPT = """You are a note-taking assistant. You will be given a YouTube video's
-title, channel, and transcript. Your job is to produce structured,
+# How each content type is described to the model, and the label used for the
+# body of the user message.
+CONTENT_FRAMING = {
+    'youtube': "a YouTube video's title, channel, and transcript",
+    'tweet': 'a tweet',
+    'article': 'an article',
+    'pdf': 'a PDF document',
+    'paste': 'pasted text',
+}
+CONTENT_BODY_LABEL = {
+    'youtube': 'Transcript',
+    'tweet': 'Tweet',
+    'article': 'Article',
+    'pdf': 'Document',
+    'paste': 'Text',
+}
+# Short formats get a one-paragraph summary and no chapters.
+SHORT_CONTENT_TYPES = {'tweet', 'paste'}
+
+
+def build_system_prompt(content_type='youtube'):
+    """Build the note-taking system prompt, framed for the content type.
+
+    The JSON output structure is identical across every type; only the
+    framing line and the summary/chapters rules change.
+    """
+    framing = CONTENT_FRAMING.get(content_type, 'some text content')
+
+    if content_type in SHORT_CONTENT_TYPES:
+        summary_rule = (
+            'summary: write 1 short paragraph at most (a few sentences) in '
+            'flowing prose, not bullet points.'
+        )
+        chapters_rule = (
+            'chapters: return an empty array []. Short content has no chapters.'
+        )
+    else:
+        summary_rule = (
+            'summary: write in flowing prose, not bullet points. Write roughly '
+            '1 paragraph per 10 minutes of content (or per ~1500 words), '
+            'minimum 2 paragraphs, maximum 6.'
+        )
+        chapters_rule = (
+            'chapters: break the content into 5-10 logical topic sections. '
+            'Just the topic name, no timestamps.'
+        )
+
+    return f"""You are a note-taking assistant. You will be given {framing}. Your job is to produce structured,
 insightful notes in JSON format.
 
 Return ONLY valid JSON, no markdown fences, no preamble.
 The JSON must match this exact structure:
 
-{
+{{
   "tags": ["tag1", "tag2"],
-  "summary": "narrative summary scaled to video length",
+  "summary": "narrative summary scaled to content length",
   "keyTakeaways": ["Takeaway 1", "Takeaway 2"],
   "analogies": ["Analogy 1"],
   "actionableSteps": ["Step 1"],
   "chapters": [
-    {"title": "Chapter title"}
+    {{"title": "Chapter title"}}
   ]
-}
+}}
 
 Rules:
-- tags: 2-5 lowercase tags, use hyphens for multi-word tags.
-  (e.g. "quantative-finance" not "quantitative finance").
+- tags: 2-5 lowercase tags, use hyphens for multi-word tags
+  (e.g. "quantitative-finance" not "quantitative finance").
   Choose freely based on the content
   (e.g. python, investing, productivity, health, design).
   The first tag will be used as the folder name so make it
   the broadest category.
-- summary: write in flowing prose, not bullet points. Write
-  roughly 1 paragraph per 10 minutes of content, minimum 2
-  paragraphs, maximum 6.
-- keyTakeaways: the 3-7 most important ideas from the video.
+- {summary_rule}
+- keyTakeaways: the 3-7 most important ideas from the content.
 - analogies: only include if there are genuinely complex
   concepts that benefit from an analogy to aid understanding.
   If not applicable, return an empty array [].
-- actionableSteps: only include if the video contains practical
+- actionableSteps: only include if the content contains practical
   advice, tutorials, or project ideas worth acting on.
   If not applicable, return an empty array [].
-- chapters: break the video into 5-10 logical topic sections.
-  Just the topic name, no timestamps.
+- {chapters_rule}
 """
 
-def generate_note(api_key, title, channel, transcript, word_count):
-    """Send the transcript to Claude and get back structured note data.
- 
+
+# Backwards-compatible default (YouTube) — kept for any external reference.
+SYSTEM_PROMPT = build_system_prompt('youtube')
+
+
+def generate_summary(api_key, title, source, text, word_count, content_type='youtube'):
+    """Send any content to Claude and get back structured note data.
+
     Args:
         api_key: Your Anthropic API key string
-        title: The video title (from YouTube)
-        channel: The channel name (from YouTube)
-        transcript: The full transcript text as one string
-        word_count: Number of words in the transcript
- 
+        title: The content title
+        source: Channel / author / domain / "Pasted text"
+        text: The raw content (transcript, article body, tweet, etc.)
+        word_count: Number of words in the content
+        content_type: youtube | tweet | article | pdf | paste
+
     Returns:
-        A parsed dict matching the JSON structure in SYSTEM_PROMPT
- 
+        {'note': <parsed dict>, 'usage': {'input_tokens', 'output_tokens'}}
+
     Raises:
         RuntimeError: If Claude's response can't be parsed as JSON after a retry
     """
     client = Anthropic(api_key=api_key)
 
-    user_message = f"""Video Title: {title}
-Channel: {channel}
+    system_prompt = build_system_prompt(content_type)
+    body_label = CONTENT_BODY_LABEL.get(content_type, 'Content')
+
+    user_message = f"""Title: {title}
+Source: {source}
+Content type: {content_type}
 Word Count: {word_count}
 
-Transcript:
-{transcript}"""
-    
-    total__input = 0
+{body_label}:
+{text}"""
+
+    total_input = 0
     total_output = 0
 
     for attempt in range(2):
         response = client.messages.create(
             model='claude-sonnet-4-6',
             max_tokens=4096,
-            system=SYSTEM_PROMPT,
+            system=system_prompt,
             messages=[
                 {'role' : 'user', 'content' : user_message}
             ]
         )
 
-        text = response.content[0].text
+        text_out = response.content[0].text
 
         total_input = response.usage.input_tokens
         total_output = response.usage.output_tokens
 
-        text = response.content[0].text
-
         try:
-            note = parse_json_response(text)
+            note = parse_json_response(text_out)
             return {
                 'note' : note,
                 'usage' : {
@@ -102,8 +153,24 @@ Transcript:
             else:
                 raise RuntimeError(
                     'Claude returned invalid JSON twice. '
-                    'The transcript may be too long or in an unsupported language.'
+                    'The content may be too long or in an unsupported language.'
                 )
+
+
+def generate_note(api_key, title, channel, transcript, word_count):
+    """Backwards-compatible YouTube wrapper around generate_summary().
+
+    Existing callers (main.py, batch.py, routes/digest.py) still pass a
+    channel + transcript; this maps them onto the generalised signature.
+    """
+    return generate_summary(
+        api_key=api_key,
+        title=title,
+        source=channel,
+        text=transcript,
+        word_count=word_count,
+        content_type='youtube',
+    )
  
 def parse_json_response(text):
     """Clean up and parse Claude's JSON response.

@@ -1,133 +1,144 @@
 # routes/process.py
-# Processes content from URLs — YouTube videos, tweets, articles.
-# Detects content type from the URL, fetches text, sends to Claude,
-# saves to database and embeddings.
-#
-# This is where the CLI's process_single() function becomes an API endpoint.
+# Processes content from URLs or pasted text — YouTube, X/Twitter, Substack
+# articles, PDFs, and pasted text. Extraction is delegated to the extractors/
+# module so this endpoint stays source-agnostic: extract → summarise → save →
+# embed → return.
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from urllib.parse import urlparse
- 
+
 from config import load_config
-from transcript import fetch_transcript
-from ai import generate_note
+from extractors import extract
+from ai import generate_summary
 from embedder import store_embedding
 from cost import record_usage
 from database import save_content
- 
+
 router = APIRouter(tags=['process'])
- 
+
+
 class ProcessRequest(BaseModel):
-    url: str
+    url: Optional[str] = None
+    text: Optional[str] = None
+    content_type: Optional[str] = None
     goal_id: Optional[int] = None
+
 
 # ── Content type detection ──
 
 def detect_content_type(url):
-    """Detect what kind of content a URL points to.
- 
-    Returns: 'youtube', 'tweet', 'article', or 'unknown'
- 
-    This is a simple URL-based check. It doesn't fetch the page
-    to determine type — just looks at the domain.
+    """Detect what kind of content a URL points to (domain-based).
+
+    Returns: 'youtube', 'tweet', or 'article' (the default).
     """
     parsed = urlparse(url)
     hostname = parsed.hostname or ''
 
     if 'youtube.com' in hostname or 'youtu.be' in hostname:
         return 'youtube'
- 
+
     if 'twitter.com' in hostname or 'x.com' in hostname:
         return 'tweet'
- 
+
     if 'substack.com' in hostname:
         return 'article'
- 
+
     # Default: treat as a generic article
     return 'article'
 
-# ── Processing endpoints ──
+
+# ── Processing endpoint ──
 
 @router.post('/process')
 def process_content(request: ProcessRequest):
-    """Process a URL and save the result.
- 
-    Currently supports YouTube videos fully.
-    Tweet and article support will use web scraping (TODO).
- 
-    The response includes the processed content so the frontend
-    can display it immediately without a second API call.
+    """Process a URL or pasted text and save the result.
+
+    Accepts either:
+      { "url": "...", "goal_id": 1 }                     — fetch from a URL
+      { "text": "...", "goal_id": 1, "content_type": "paste" }  — pasted text
+
+    The response includes the processed content so the frontend can display
+    it immediately without a second API call.
     """
-
     config = load_config()
-    content_type = detect_content_type(request.url)
 
-    if content_type == 'youtube':
-        return process_youtube(request.url, request.goal_id, config)
-    elif content_type == 'tweet':
-        #! TODO Implement processing for tweets
-        raise HTTPException(status_code=501, detail='Tweet processing not implemented yet')
-    elif content_type == 'article':
-        #! TODO Implement processing for articles
-        raise HTTPException(status_code=501, detail='Article processing not implemented yet')
+    # Pasted-text path takes precedence when text is supplied.
+    if request.text is not None and request.text.strip():
+        content_type = request.content_type or 'paste'
+        try:
+            data = extract(content_type, text=request.text)
+        except NotImplementedError as err:
+            raise HTTPException(status_code=501, detail=str(err))
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=str(err))
+
+    elif request.url:
+        content_type = request.content_type or detect_content_type(request.url)
+        try:
+            data = extract(content_type, url=request.url)
+        except NotImplementedError as err:
+            raise HTTPException(status_code=501, detail=str(err))
+        except ValueError as err:
+            raise HTTPException(status_code=400, detail=str(err))
+
     else:
-        raise HTTPException(status_code=400, detail='Unsupported content type')
-    
-def process_youtube(url, goal_id, config):
-    """Process a YouTube video — the full pipeline.
- 
-    1. Fetch transcript + metadata
-    2. Generate note with Claude
+        raise HTTPException(
+            status_code=400,
+            detail='Provide either a url or text to process.'
+        )
+
+    return process_extracted(data, request.goal_id, config)
+
+
+def process_extracted(data, goal_id, config):
+    """Run the shared pipeline on a normalised extractor dict.
+
+    1. Summarise with Claude (framed for the content type)
+    2. Record costs
     3. Save to database
     4. Embed for search
     5. Return the processed content
- 
-    This is the same flow as main.py's process_single() but
-    returns JSON instead of printing to the terminal.
     """
     try:
-        # Step 1: Fetch transcript
-        data = fetch_transcript(url, config['youtube_api_key'])
-
-        # Step 2: Generate note with Claude
-        result = generate_note(
+        result = generate_summary(
             api_key=config['api_key'],
             title=data['title'],
-            channel=data['channel'],
-            transcript=data['transcript'],
-            word_count=data['word_count']
+            source=data['source'],
+            text=data['text'],
+            word_count=data['word_count'],
+            content_type=data['content_type'],
         )
         note = result['note']
         usage = result['usage']
 
-        # Step 3: Record costs
         cost_stats = record_usage(usage['input_tokens'], usage['output_tokens'])
 
         content_id = save_content(
             goal_id=goal_id,
-            content_type='youtube',
-            url=url,
+            content_type=data['content_type'],
+            url=data['url'],
             title=data['title'],
-            source=data['channel'],
+            source=data['source'],
             summary=note['summary'],
             key_points=note.get('keyTakeaways', []),
-            raw_text=data['transcript'],
+            raw_text=data['text'],
             tags=note.get('tags', []),
-            cost=cost_stats['call_cost']
+            cost=cost_stats['call_cost'],
         )
- 
-        # Step 5: Embed for search
+
+        # Embed for semantic search
         store_embedding(str(content_id), data['title'], note['summary'])
 
-        # Return everything the frontend needs
         return {
             'id': content_id,
-            'content_type': 'youtube',
+            'content_type': data['content_type'],
             'title': data['title'],
-            'channel': data['channel'],
-            'url': url,
+            'source': data['source'],
+            # 'channel' kept as an alias for backwards compatibility
+            'channel': data['source'],
+            'url': data['url'],
             'summary': note['summary'],
             'key_takeaways': note.get('keyTakeaways', []),
             'analogies': note.get('analogies', []),
@@ -136,8 +147,10 @@ def process_youtube(url, goal_id, config):
             'tags': note.get('tags', []),
             'cost': cost_stats['call_cost'],
             'word_count': data['word_count'],
-            'goal_id': goal_id
+            'goal_id': goal_id,
         }
 
+    except HTTPException:
+        raise
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
