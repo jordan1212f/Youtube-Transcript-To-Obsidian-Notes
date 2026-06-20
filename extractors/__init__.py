@@ -16,9 +16,10 @@ from .youtube import extract_youtube
 from .paste import extract_paste
 from .substack import extract_substack
 from .pdf import extract_pdf
+from .twitter import extract_twitter
 
 # Types we intend to support but haven't built extractors for yet.
-NOT_IMPLEMENTED_TYPES = {'tweet'}
+NOT_IMPLEMENTED_TYPES = set()
 
 
 def extract(content_type, url=None, text=None, file=None):
@@ -44,6 +45,11 @@ def extract(content_type, url=None, text=None, file=None):
             raise ValueError('text is required for paste content.')
         return extract_paste(text)
 
+    if content_type == 'tweet':
+        if not url:
+            raise ValueError('A url is required to extract an X / Twitter post.')
+        return extract_twitter(url)
+
     if content_type == 'article':
         if not url:
             raise ValueError('A url is required to extract an article.')
@@ -68,5 +74,6 @@ __all__ = [
     'extract_paste',
     'extract_substack',
     'extract_pdf',
+    'extract_twitter',
     'NOT_IMPLEMENTED_TYPES',
 ]
