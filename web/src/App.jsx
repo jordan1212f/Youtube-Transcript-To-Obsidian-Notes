@@ -4,6 +4,7 @@ import Home from './components/Home'
 import Ask from './components/Ask'
 import Library from './components/Library'
 import SettingsModal from './components/SettingsModal'
+import AddModal from './components/AddModal'
 import Onboarding from './components/Onboarding'
 
 /* ============================================================
@@ -150,18 +151,15 @@ export default function App() {
           {route === 'library' && <Library openAdd={() => setShowAdd(true)} />}
         </main>
 
-        {/* Modal placeholders — Escape closes whichever is open. */}
-        {showAdd && (
-          <div className="scrim" onClick={closeModals}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-head">
-                <h2>Add</h2>
-                <button className="close" onClick={closeModals} aria-label="Close">✕</button>
-              </div>
-              <p className="home-motto">AddModal placeholder.</p>
-            </div>
-          </div>
-        )}
+        {/* Add content — Escape (handled above) and the scrim both close it. */}
+        <AddModal
+          isOpen={showAdd}
+          onClose={closeModals}
+          onProcessed={() => {
+            closeModals()
+            setRoute('library') // surface the freshly saved content
+          }}
+        />
 
         {showSettings && (
           <SettingsModal

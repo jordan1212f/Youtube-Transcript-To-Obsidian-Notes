@@ -5811,3 +5811,150 @@ a { color: inherit; text-decoration: none; }
 }
 @keyframes obSpin { to { transform: rotate(360deg); } }
 .ob-gsigning-text { margin: 0; font-family: "Geist", sans-serif; font-size: 14px; color: #c7c7c7; }
+
+/* ============================================================
+   AddModal — content ingestion (URL / upload / paste)
+
+   Reuses the shared modal atoms (.scrim, .modal, .method-tabs,
+   .dropzone, .url-input, .pill, .btn). Only the bits unique to
+   this modal live here.
+   ============================================================ */
+.add-sub {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--fg-4);
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+
+/* The Process button reads as the primary accent action. */
+.add-modal .url-input button {
+  background: var(--accent);
+  color: #0a1311;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-modal .url-input button:not(:disabled):hover { background: var(--accent-bright); }
+
+.add-hint {
+  margin-top: 10px;
+  font-family: "Geist Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--fg-4);
+}
+
+.add-browse {
+  color: var(--accent-bright);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.add-textarea {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 140px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  border: 1px solid var(--hairline);
+  outline: 0;
+  color: var(--fg);
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-family: "Geist", sans-serif;
+  transition: border-color 150ms var(--ease);
+}
+.add-textarea:focus { border-color: var(--accent-ring); }
+.add-textarea::placeholder { color: var(--fg-4); }
+
+.add-filelist {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.add-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+}
+.add-file .name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.add-file .size {
+  font-family: "Geist Mono", monospace;
+  font-size: 10.5px;
+  color: var(--fg-4);
+}
+.add-file .rm {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--fg-4);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.add-file .rm:hover { color: var(--danger); }
+
+.add-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.add-error {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 90, 95, 0.3);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 12.5px;
+}
+
+.add-loading {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+.add-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--hairline-2);
+  border-top-color: var(--accent-bright);
+  animation: addSpin 700ms linear infinite;
+}
+@keyframes addSpin { to { transform: rotate(360deg); } }
+
+.add-goalbar {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pill-sm { padding: 4px 10px; font-size: 11px; }
