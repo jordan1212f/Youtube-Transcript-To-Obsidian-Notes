@@ -100,6 +100,7 @@ def _extract_body(soup):
 
     blocks = []
     for el in container.find_all(BLOCK_TAGS):
+        1
         chunk = el.get_text(' ', strip=True)
         if chunk:
             blocks.append(chunk)
