@@ -560,19 +560,47 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   display: grid; place-items: center;
 }
-.thumb.video {
-  background:
-    linear-gradient(135deg, rgba(var(--accent-rgb), 0.10), rgba(0,0,0,0)),
-    repeating-linear-gradient(45deg, var(--panel-2) 0 6px, var(--panel-3) 6px 12px);
+.thumb.video { background: var(--panel-2); }
+/* Real YouTube thumbnail filling the 16:9 frame. */
+.thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .thumb .play {
+  position: relative;
+  z-index: 1;
   width: 38px; height: 38px;
   border-radius: 50%;
   background: rgba(0,0,0,0.55);
   border: 1px solid var(--hairline-2);
   display: grid; place-items: center;
+  color: #fff;
   backdrop-filter: blur(8px);
 }
+
+/* Clean placeholder header for non-YouTube cards (no broken-image stripes). */
+.type-header {
+  height: 64px;
+  border-radius: 8px;
+  background: var(--panel-3);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.type-header .th-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fg-3);
+}
+.type-header .th-icon { color: var(--fg-3); }
 .thumb .duration {
   position: absolute;
   bottom: 8px; right: 8px;
@@ -749,6 +777,42 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--hairline);
   margin-bottom: 22px;
 }
+/* YouTube detail hero: real thumbnail, clickable to open the video. */
+.article-hero.has-thumb {
+  display: block;
+  cursor: pointer;
+}
+.article-hero .play {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid var(--hairline-2);
+  display: grid; place-items: center;
+  color: #fff;
+  backdrop-filter: blur(8px);
+  transition: background 150ms var(--ease);
+}
+.article-hero.has-thumb:hover .play { background: rgba(0,0,0,0.72); }
+/* Non-YouTube detail hero: clean solid banner with a centred type label. */
+.article-hero.type-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--panel-3);
+}
+.article-hero .th-label {
+  font-family: "Geist Mono", monospace;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fg-3);
+}
+.article-hero .th-icon { color: var(--fg-3); }
 
 .article-title {
   font-family: "Geist Mono", monospace;

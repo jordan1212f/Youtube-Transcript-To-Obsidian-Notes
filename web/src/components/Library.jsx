@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FileText } from 'lucide-react'
 import { ArrowIcon, PlayIcon, ExternalIcon, AddIcon } from './Icons'
+import { getYouTubeThumbnail } from '../utils/thumbnail'
 
 /* ============================================================
    Library — filterable content grid + inline detail view.
@@ -14,6 +16,20 @@ const TYPE_DOT = {
   article: 'var(--cat-tech)',
   tweet: 'var(--fg-2)',
   pdf: '#E5B86F',
+}
+
+// Friendlier labels for the placeholder header on non-YouTube content.
+const TYPE_LABEL = {
+  youtube: 'VIDEO',
+  video: 'VIDEO',
+  article: 'ESSAY',
+  tweet: 'TWEET',
+  pdf: 'PDF',
+  paste: 'NOTE',
+}
+
+function typeLabel(type) {
+  return TYPE_LABEL[type] || (type || 'content').toUpperCase()
 }
 
 function parseTs(s) {
@@ -153,6 +169,7 @@ export default function Library({ openAdd, initialGoalId = null }) {
 function ContentCard({ item, idx, color, onClick }) {
   const type = item.content_type || 'article'
   const isVideo = type === 'youtube' || type === 'video'
+  const thumb = isVideo ? getYouTubeThumbnail(item.url) : null
   return (
     <article
       className="card"
@@ -172,14 +189,20 @@ function ContentCard({ item, idx, color, onClick }) {
         <span className="ts">{relativeTime(item.created_at)}</span>
       </div>
 
-      <div className={`thumb ${isVideo ? 'video' : ''}`}>
-        <span className="type-badge">{type}</span>
-        {isVideo && (
+      {thumb ? (
+        <div className="thumb video">
+          <img className="thumb-img" src={thumb} alt="" loading="lazy" />
+          <span className="type-badge">{type}</span>
           <div className="play">
             <PlayIcon width={14} height={14} />
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="type-header">
+          {type === 'pdf' && <FileText className="th-icon" width={15} height={15} />}
+          <span className="th-label">{typeLabel(type)}</span>
+        </div>
+      )}
 
       <h3 className="title">{item.title}</h3>
       {item.summary && <p className="summary">{item.summary}</p>}
@@ -296,6 +319,7 @@ function DetailView({ id, colorByGoal, onBack }) {
 
   const type = content.content_type || 'article'
   const isVideo = type === 'youtube' || type === 'video'
+  const thumb = isVideo ? getYouTubeThumbnail(content.url) : null
   const color = colorByGoal[content.goal_id]
   const tags = Array.isArray(content.tags) ? content.tags : []
   const takeaways = Array.isArray(content.key_points) ? content.key_points : []
@@ -310,14 +334,25 @@ function DetailView({ id, colorByGoal, onBack }) {
           <span className="current">{type}</span>
         </div>
 
-        <div className={`article-hero thumb ${isVideo ? 'video' : ''}`}>
-          <span className="type-badge">{type}</span>
-          {isVideo && (
+        {thumb ? (
+          <a
+            className="article-hero has-thumb"
+            href={content.url}
+            target="_blank"
+            rel="noreferrer"
+            title="Open video on YouTube"
+          >
+            <img className="thumb-img" src={thumb} alt="" />
             <div className="play">
-              <PlayIcon width={18} height={18} />
+              <PlayIcon width={20} height={20} />
             </div>
-          )}
-        </div>
+          </a>
+        ) : (
+          <div className="article-hero type-banner">
+            {type === 'pdf' && <FileText className="th-icon" width={18} height={18} />}
+            <span className="th-label">{typeLabel(type)}</span>
+          </div>
+        )}
 
         <h1 className="article-title">{content.title}</h1>
 
