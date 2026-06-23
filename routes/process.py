@@ -6,6 +6,7 @@
 
 import os
 import tempfile
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
@@ -17,7 +18,7 @@ from extractors import extract
 from ai import generate_summary
 from embedder import store_embedding
 from cost import record_usage
-from database import save_content
+from database import save_content, create_action
 
 router = APIRouter(tags=['process'])
 
@@ -173,8 +174,13 @@ def process_extracted(data, goal_id, config):
     2. Record costs
     3. Save to database
     4. Embed for search
-    5. Return the processed content
+    5. Auto-generate actions from the AI's suggested steps
+    6. Return the processed content
     """
+    # Normalise a falsy goal_id (None / 0 / '') to None — the frontend may send
+    # an empty string when no goal is selected, and the FK expects NULL or a row.
+    goal_id = goal_id if goal_id else None
+
     try:
         result = generate_summary(
             api_key=config['api_key'],
@@ -205,6 +211,25 @@ def process_extracted(data, goal_id, config):
         # Embed for semantic search
         store_embedding(str(content_id), data['title'], note['summary'])
 
+        # Auto-generate actions from the AI's suggested steps. Actions only
+        # make sense in the context of a goal (and actions.goal_id is NOT
+        # NULL), so we skip this when no goal was selected.
+        action_ids = []
+        actions_note = None
+        if goal_id is not None:
+            deadline = (datetime.utcnow() + timedelta(hours=48)).strftime('%Y-%m-%d %H:%M:%S')
+            for step in note.get('actionableSteps', []):
+                if step and step.strip():  # skip empty strings
+                    action_id = create_action(
+                        goal_id=goal_id,
+                        title=step.strip(),
+                        deadline=deadline,
+                        content_id=content_id,
+                    )
+                    action_ids.append(action_id)
+        else:
+            actions_note = 'No goal selected — link to a goal to generate actions'
+
         return {
             'id': content_id,
             'content_type': data['content_type'],
@@ -222,6 +247,9 @@ def process_extracted(data, goal_id, config):
             'cost': cost_stats['call_cost'],
             'word_count': data['word_count'],
             'goal_id': goal_id,
+            'actions_created': len(action_ids),
+            'action_ids': action_ids,
+            'actions_note': actions_note,
         }
 
     except HTTPException:
