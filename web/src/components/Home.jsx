@@ -16,6 +16,34 @@ const TYPE_DOT = {
   pdf: '#E5B86F',
 }
 
+// Friendlier display labels for the compact recents badge.
+const TYPE_LABEL = {
+  youtube: 'VIDEO',
+  video: 'VIDEO',
+  article: 'ESSAY',
+  tweet: 'TWEET',
+  pdf: 'PDF',
+  paste: 'NOTE',
+}
+
+// saved_content.created_at is SQLite UTC text ("YYYY-MM-DD HH:MM:SS").
+function timeAgo(dateStr) {
+  if (!dateStr) return ''
+  const iso = dateStr.includes('T') ? dateStr : `${dateStr.replace(' ', 'T')}Z`
+  const then = new Date(iso).getTime()
+  if (Number.isNaN(then)) return ''
+
+  const mins = Math.floor((Date.now() - then) / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  if (hours < 48) return 'yesterday'
+
+  return `${Math.floor(hours / 24)}d ago`
+}
+
 export default function Home({ setRoute, openDetail, motto }) {
   return (
     <div className="main-inner home-page">
@@ -137,6 +165,7 @@ function SearchBar({ setRoute }) {
 
 function Recents({ openDetail, setRoute }) {
   const [items, setItems] = useState(null)
+  const [goalsById, setGoalsById] = useState({})
 
   useEffect(() => {
     let alive = true
@@ -148,6 +177,24 @@ function Recents({ openDetail, setRoute }) {
       .catch(() => {
         if (alive) setItems([])
       })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  // Library items carry goal_id but not the goal's title/colour, so build a
+  // lookup to render each card's goal pill.
+  useEffect(() => {
+    let alive = true
+    fetch('/api/goals')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!alive) return
+        const map = {}
+        if (Array.isArray(data)) data.forEach((g) => { map[g.id] = g })
+        setGoalsById(map)
+      })
+      .catch(() => {})
     return () => {
       alive = false
     }
@@ -169,7 +216,12 @@ function Recents({ openDetail, setRoute }) {
       ) : (
         <div className="recents-row">
           {(items || []).map((item) => (
-            <RecentMini key={item.id} item={item} onClick={() => openDetail(item.id)} />
+            <RecentMini
+              key={item.id}
+              item={item}
+              goal={goalsById[item.goal_id]}
+              onClick={() => openDetail(item.id)}
+            />
           ))}
         </div>
       )}
@@ -177,24 +229,27 @@ function Recents({ openDetail, setRoute }) {
   )
 }
 
-function RecentMini({ item, onClick }) {
+function RecentMini({ item, goal, onClick }) {
   const type = item.content_type || 'article'
-  const firstTag = Array.isArray(item.tags) && item.tags.length ? item.tags[0] : null
 
   return (
     <button className="recent-mini" onClick={onClick}>
-      <span className="rm-tags">
-        <span className="tag">
+      <span className="rm-top">
+        <span className="rm-type">
           <span className="dot" style={{ background: TYPE_DOT[type] || 'var(--fg-4)' }}></span>
-          {type}
+          {TYPE_LABEL[type] || type.toUpperCase()}
         </span>
-        {firstTag && <span className="tag">{firstTag}</span>}
+        {item.created_at && <span className="rm-ts">{timeAgo(item.created_at)}</span>}
       </span>
-      <span className="rm-title rm-title-2">{item.title}</span>
-      {item.summary && <span className="rm-summary">{item.summary}</span>}
-      <span className="rm-foot">
-        <span className="src mono">{item.source}</span>
-      </span>
+
+      <span className="rm-title">{item.title}</span>
+
+      {goal && (
+        <span className="rm-goal">
+          <span className="dot" style={{ background: goal.area_color || 'var(--fg-4)' }}></span>
+          <span className="label">{goal.title}</span>
+        </span>
+      )}
     </button>
   )
 }
